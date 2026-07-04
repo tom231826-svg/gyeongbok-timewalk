@@ -125,7 +125,7 @@ open ../index.html           # 로컬 실행(파일 하나로 완결, 서버 불
 - **빌드 후 아티팩트에서 스캔이 안 보이면** → 콘솔에서 blob/fetch 오류 검색. 있으면 누군가 Draco나 내장 텍스처를 되살린 것(§4-1 위반)
 - **GLB가 로컬에선 보이는데 배포판에서 텍스처가 하얗게 나오면** → `dataTexture`의 `flipY=false` 확인, 재질명↔`SCANS[].tex` 키 매칭(`[MAT]` 로그) 확인
 - **아티팩트 업로드가 용량으로 거부되면** → `build_v2.py`의 `build(include_haeng=False)`처럼 스캔을 선별 포함(패턴 있음)
-- **이 문서와 실물이 어긋나면** → 실물이 진실. `git`은 아직 없음 — 첫 작업으로 `git init` + 커밋 추천
+- **이 문서와 실물이 어긋나면** → 실물이 진실. git 있음(2026-07-04 밤): 비공개 원격 = https://github.com/tom231826-svg/gyeongbok-timewalk (대용량 원본 데이터는 .gitignore — 재확보는 MANIFEST·fetch_more_scans.sh). 작업 후 커밋 습관 유지
 
 ## 9. 자료 사용 조건 요약
 
