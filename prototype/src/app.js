@@ -748,6 +748,36 @@ if(window.PROPS){
   put(P.rubble, 3, -430, [2]); put(P.rubble, -4, -498, [2]);
 }
 
+// ───────────────────────── v0.6: 반차도풍 사람들 (기록화 인용 실루엣) ─────────────────────────
+if(window.FIGURES && window.FIGURES.texture){
+  const mkFig = (kind, seed, x, z, eras, h)=>{
+    const t = FIGURES.texture(kind, seed);
+    t.anisotropy = 4;
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map:t, transparent:true }));
+    const hh = h || 1.7;
+    s.scale.set(hh/2, hh, 1);
+    s.position.set(x, hh/2, z);
+    scene.add(s);
+    eraGroups.push({ obj:s, eras });
+    s.visible = eras.includes(era);
+  };
+  let fs = 11;
+  // 1888 조회 도열 — 문동무서(文東武西): 동쪽 문관, 서쪽 무관, 품계석 열 기준
+  for(let r=0; r<2; r++)
+    for(let i=0; i<5; i++){
+      const z = -260 - i*8;
+      mkFig("munkwan", fs++,  5.5 + r*2.6, z, [3]);
+      mkFig("mukwan",  fs++, -5.5 - r*2.6, z, [3]);
+    }
+  mkFig("gunjol", 31,  3.2, -233, [3]); mkFig("gunjol", 32, -3.2, -233, [3]);   // 근정문 수문군
+  mkFig("gungnyeo", 41, 18, -306, [3]); mkFig("gungnyeo", 42, 20.5, -303, [3]);
+  // 1929 박람회 관람객
+  for(let i=0;i<6;i++) mkFig("visitor1929", 50+i, -14 + i*6, -248 - (i%3)*16, [4]);
+  // 2026 관광객
+  [[3,-15],[-6,-40],[2,-150],[-8,-250],[6,-268],[12,-300],[-15,-290],[4,-214]]
+    .forEach((p,i)=> mkFig("tourist", 60+i, p[0], p[1], [5]));
+}
+
 // ───────────────────────── 실측 스캔 (v0.3: 국가유산청 원본, 고종대 원형 현존 건물) ─────────────────────────
 // 회랑 스캔이 로드되면 절차 생성 회랑(남쪽 좌우·동쪽)을 시대 3~5에서 스캔으로 교체.
 // CSP 주의: 아티팩트 호스팅은 blob URL(fetch·worker·img)을 차단 → Draco/내장 텍스처 금지.
@@ -873,6 +903,10 @@ const LANDMARKS = [
 ];
 addEventListener("keydown", e=>{
   keys.add(e.code);
+  // 투어 중 이동 입력 = 자유탐험으로 이탈 (AC 디스커버리 투어 방식)
+  if(typeof tour !== "undefined" && tour.on){
+    if(/^(Key[WASD]|Arrow)/.test(e.code) || e.code === "Escape"){ tourEnd(false); return; }
+  }
   const n = landmarkIndexFromKey(e);
   if(n >= 0){
     e.preventDefault();
@@ -894,6 +928,7 @@ canvas.addEventListener("pointerdown", e=>{
   document.getElementById("hint").style.opacity=0;
   dragDist = 0;                          // 핫스팟 클릭 판정용 (드래그와 구분)
   if(e.pointerType==="touch" && e.clientX < innerWidth*0.45 && e.clientY > innerHeight*0.5 && joyId===null){
+    if(typeof tour !== "undefined" && tour.on) tourEnd(false);
     joyId=e.pointerId; joyOx=e.clientX; joyOy=e.clientY;
     joyEl.style.display="block"; joyEl.style.left=(joyOx-50)+"px"; joyEl.style.top=(joyOy-50)+"px";
   } else if(lookId===null){ lookId=e.pointerId; lx=e.clientX; ly=e.clientY; }
@@ -945,12 +980,18 @@ function movePlayerTo(x, z){
   player.x = Math.max(-168, Math.min(168, x));
   player.z = Math.max(-560, Math.min(55, z));
 }
-// 로드뷰식 이동 트윈 — 순간이동 대신 짧게 미끄러져서 멀미 방지
+// 로드뷰식 이동 트윈 — 순간이동 대신 짧게 미끄러져서 멀미 방지 (yawTo 지정 시 시선도 함께 회전)
 let glide = null;
-function glideTo(x, z){
+function glideTo(x, z, yawTo){
   glide = { x0:player.x, z0:player.z,
             x1:Math.max(-168, Math.min(168, x)), z1:Math.max(-560, Math.min(55, z)),
+            yaw0:player.yaw, yaw1:null,
             t:0, dur:Math.min(0.9, 0.3 + Math.hypot(x-player.x, z-player.z)/220) };
+  if(typeof yawTo === "number"){
+    let d = yawTo - player.yaw;
+    d = ((d + Math.PI) % (2*Math.PI) + 2*Math.PI) % (2*Math.PI) - Math.PI;   // 최단 회전
+    glide.yaw1 = player.yaw + d;
+  }
 }
 function resolveCollisions(){
   for(const c of colliders){
@@ -982,6 +1023,7 @@ function applyEra(i, first=false){
     grainBase = (i === 4) ? 0.10 : 0.03;
   }
   scanTexBindings.forEach(applyScanTex);             // 시대별 스캔 텍스처 스왑 (P1-A)
+  if(typeof AudioEng !== "undefined") AudioEng.rebuild();   // 시대별 앰비언스 교체
   sunDir.set(...E.sun[0]).normalize();
   sun.intensity = E.sun[1]; sun.color.set(E.sun[2]);
   for(const r of ridges)   // 능선을 시대 안개색으로 물들여 대기 원근감 표현
@@ -1068,6 +1110,134 @@ document.getElementById("shareBtn").addEventListener("click", ()=>{
     .catch(()=> toast(url));
 });
 
+// ───────────────────────── v0.6: 소리 (웹오디오 합성 — 오디오 파일 0바이트) ─────────────────────────
+const AudioEng = (()=>{
+  let ctx = null, master = null, muted = false, eraNodes = [], chirpTimer = null, noiseBuf = null;
+  function noiseSrc(){
+    const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true; return s;
+  }
+  function ensure(){
+    if(ctx) return false;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return false;
+    ctx = new AC();
+    noiseBuf = ctx.createBuffer(1, ctx.sampleRate*2, ctx.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+    master = ctx.createGain(); master.gain.value = 0.55; master.connect(ctx.destination);
+    rebuild();
+    return true;
+  }
+  function stopEra(){
+    eraNodes.forEach(n=>{ try{ n.stop && n.stop(); }catch(_e){} try{ n.disconnect && n.disconnect(); }catch(_e){} });
+    eraNodes = [];
+    if(chirpTimer){ clearInterval(chirpTimer); chirpTimer = null; }
+  }
+  function rebuild(){
+    if(!ctx) return;
+    stopEra();
+    // 바람 — 모든 시대 (폐허기는 거세게)
+    const wind = noiseSrc();
+    const wf = ctx.createBiquadFilter(); wf.type = "lowpass"; wf.frequency.value = era===2 ? 480 : 320;
+    const wg = ctx.createGain(); wg.gain.value = era===2 ? 0.10 : 0.035;
+    const lfo = ctx.createOscillator(); lfo.frequency.value = 0.13;
+    const lg = ctx.createGain(); lg.gain.value = era===2 ? 0.05 : 0.015;
+    lfo.connect(lg); lg.connect(wg.gain);
+    wind.connect(wf); wf.connect(wg); wg.connect(master);
+    wind.start(); lfo.start();
+    eraNodes.push(wind, lfo, wf, wg, lg);
+    // 군중 웅성 — 1888(조정)·1929(박람회)·2026(관광객)
+    if(era===3 || era===4 || era===5){
+      const cr = noiseSrc();
+      const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 420; bp.Q.value = 1.2;
+      const cg = ctx.createGain(); cg.gain.value = era===4 ? 0.045 : (era===3 ? 0.03 : 0.022);
+      cr.connect(bp); bp.connect(cg); cg.connect(master); cr.start();
+      eraNodes.push(cr, bp, cg);
+    }
+    // 새소리 — 폐허·1929 제외
+    if(era !== 2 && era !== 4){
+      chirpTimer = setInterval(()=>{
+        if(!ctx || muted || Math.random() < 0.45) return;
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        const f0 = 2400 + Math.random()*1600, t0 = ctx.currentTime;
+        o.frequency.setValueAtTime(f0, t0);
+        o.frequency.exponentialRampToValueAtTime(f0*(0.7+Math.random()*0.6), t0+0.12);
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(0.02, t0+0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0+0.18);
+        o.connect(g); g.connect(master);
+        o.start(t0); o.stop(t0+0.2);
+      }, 1400);
+    }
+  }
+  function step(run){
+    if(!ctx || muted) return;
+    const src = ctx.createBufferSource(); src.buffer = noiseBuf;
+    const f = ctx.createBiquadFilter(); f.type = "bandpass";
+    f.frequency.value = 700 + Math.random()*300; f.Q.value = 1.5;
+    const g = ctx.createGain(); const t0 = ctx.currentTime;
+    g.gain.setValueAtTime(run ? 0.05 : 0.035, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.07);
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start(t0, Math.random()*1.5, 0.09);
+  }
+  function toggle(){ muted = !muted; if(master) master.gain.value = muted ? 0 : 0.55; return muted; }
+  return { ensure, rebuild, step, toggle };
+})();
+document.getElementById("soundBtn").addEventListener("click", ()=>{
+  const isNew = AudioEng.ensure();
+  const m = isNew ? false : AudioEng.toggle();
+  document.getElementById("soundBtn").textContent = m ? "🔇" : "🔊";
+  toast(m ? "소리 끔" : "소리 켬 — 시대마다 소리가 다릅니다");
+});
+canvas.addEventListener("pointerdown", ()=>{ AudioEng.ensure(); }, { once:true });
+
+// ───────────────────────── v0.6: 가이드 투어 "왕의 하루" ─────────────────────────
+const TOUR = /*__TOUR__*/null;
+const subEl = document.getElementById("subtitle");
+const subTxt = subEl.querySelector(".txt");
+const subWho = subEl.querySelector(".who");
+const tour = { on:false, st:0, ln:0, timer:null };
+function tourStart(){
+  if(!TOUR){ toast("이 빌드에는 투어가 없습니다"); return; }
+  AudioEng.ensure();
+  tour.on = true;
+  subEl.style.display = "block";
+  if(TOUR.intro) toast(TOUR.intro);
+  tourStation(0);
+}
+function tourStation(i){
+  if(!tour.on) return;
+  if(i >= TOUR.stations.length){ tourEnd(true); return; }
+  tour.st = i; tour.ln = 0;
+  const s = TOUR.stations[i];
+  subWho.textContent = "史官 — " + TOUR.title + " · " + s.name + " (" + (i+1) + "/" + TOUR.stations.length + ")";
+  if(era !== s.era) setEra(s.era);
+  glideTo(s.pos[0], s.pos[1], s.yaw);
+  tourLine();
+}
+function tourLine(){
+  if(!tour.on) return;
+  const s = TOUR.stations[tour.st];
+  if(tour.ln >= s.lines.length){ tourStation(tour.st + 1); return; }
+  const L = s.lines[tour.ln];
+  subTxt.textContent = L.t;
+  clearTimeout(tour.timer);
+  tour.timer = setTimeout(()=>{ tour.ln++; tourLine(); }, (L.dur || 5) * 1000);
+}
+function tourEnd(finished){
+  if(!tour.on) return;
+  tour.on = false;
+  clearTimeout(tour.timer);
+  subEl.style.display = "none";
+  toast(finished ? "왕의 하루가 저물었습니다 — 이제 자유롭게 시간을 걸어보세요"
+                 : "투어에서 나왔습니다 (📜 버튼으로 다시)");
+}
+document.getElementById("tourBtn").addEventListener("click", ()=>{ tour.on ? tourEnd(false) : tourStart(); });
+document.getElementById("subNext").addEventListener("click", ()=>{ clearTimeout(tour.timer); tourStation(tour.st + 1); });
+document.getElementById("subPrev").addEventListener("click", ()=>{ clearTimeout(tour.timer); tourStation(Math.max(0, tour.st - 1)); });
+document.getElementById("subExit").addEventListener("click", ()=> tourEnd(false));
+
 // ───────────────────────── 기록 카드 ─────────────────────────
 const CARDS = [
   { t:"1395 — 새 궁궐 준공", q:"태조 4년, 새 궁궐이 준공되었다. 규모는 약 390여 칸.",
@@ -1146,7 +1316,7 @@ canvas.addEventListener("click", (e)=>{
 
 // ───────────────────────── 루프 ─────────────────────────
 const clock = new THREE.Clock();
-let lastPX = 0, lastPZ = 0;
+let lastPX = 0, lastPZ = 0, stepAcc = 0;
 function frame(){
   const dt = Math.min(0.05, clock.getDelta());
   if(glide){
@@ -1155,6 +1325,7 @@ function frame(){
     const e = k<.5 ? 2*k*k : 1-Math.pow(-2*k+2,2)/2;   // easeInOut
     player.x = glide.x0 + (glide.x1-glide.x0)*e;
     player.z = glide.z0 + (glide.z1-glide.z0)*e;
+    if(glide.yaw1 !== null) player.yaw = glide.yaw0 + (glide.yaw1-glide.yaw0)*e;
     if(k>=1){ glide=null; resolveCollisions(); }
   } else {
     let mx=0, mz=0;
@@ -1178,10 +1349,14 @@ function frame(){
   sun.position.set(player.x + sunDir.x*280, Math.max(70, sunDir.y*280), player.z + sunDir.z*280);
   sun.target.position.set(player.x, 0, player.z);
   sun.target.updateMatrixWorld();
+  const movedDist = Math.hypot(player.x - lastPX, player.z - lastPZ);
   if(eraFxPass){
     eraFxPass.uniforms.uTime.value += dt;
-    const moving = glide || Math.hypot(player.x - lastPX, player.z - lastPZ) > 0.01;
-    eraFxPass.uniforms.uGrain.value = grainBase * (moving ? 0.4 : 1);   // 이동 중 그레인 감쇠(멀미 예방)
+    eraFxPass.uniforms.uGrain.value = grainBase * ((glide || movedDist > 0.01) ? 0.4 : 1);   // 이동 중 그레인 감쇠
+  }
+  if(!glide && movedDist > 0.005){                    // 발소리 (걷기·달리기)
+    stepAcc += movedDist;
+    if(stepAcc > 0.85){ AudioEng.step(movedDist/dt > 20); stepAcc = 0; }
   }
   lastPX = player.x; lastPZ = player.z;
   if(composer) composer.render();

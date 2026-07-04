@@ -39,12 +39,23 @@
     background:#171719; display:none; }
   #maplabel { left:24px; bottom:56px; font-size:10px; color:rgba(255,255,255,.55); display:none; }
 
-  #infoBtn, #shareBtn, #mapBtn { width:40px; height:40px; border-radius:50%;
+  #infoBtn, #shareBtn, #mapBtn, #tourBtn, #soundBtn { width:40px; height:40px; border-radius:50%;
     border:1px solid rgba(255,255,255,.4); background:rgba(20,20,26,.55); color:#fff;
     font-size:17px; font-weight:700; cursor:pointer; backdrop-filter:blur(8px); z-index:11; position:fixed; right:20px; }
   #infoBtn { bottom:100px; }
   #shareBtn { bottom:148px; }
   #mapBtn { bottom:196px; }
+  #tourBtn { bottom:244px; border-color:rgba(240,194,116,.75); }
+  #soundBtn { bottom:292px; }
+  #subtitle { position:fixed; z-index:25; left:50%; transform:translateX(-50%); bottom:118px;
+    width:min(680px,92vw); background:rgba(12,12,16,.82); border:1px solid rgba(240,194,116,.35);
+    border-radius:14px; padding:14px 18px 10px; color:#f5ecd9; text-align:center;
+    backdrop-filter:blur(10px); display:none; }
+  #subtitle .who { font-size:10.5px; color:#f0c274; letter-spacing:.12em; margin-bottom:6px; }
+  #subtitle .txt { font-size:15.5px; line-height:1.65; min-height:3.2em; }
+  #subtitle .ctl { margin-top:8px; display:flex; justify-content:center; gap:10px; }
+  #subtitle .ctl button { border:1px solid rgba(255,255,255,.3); background:rgba(255,255,255,.08);
+    color:#eee; border-radius:8px; padding:4px 14px; font-size:12px; cursor:pointer; }
   #scanNote { position:fixed; z-index:12; left:50%; transform:translateX(-50%); bottom:88px;
     font-size:11px; color:#cfe6cf; background:rgba(16,20,16,.7); border-radius:8px; padding:5px 12px;
     transition:opacity 1s; pointer-events:none; }
@@ -82,7 +93,7 @@
 
 <div class="hud" id="title">
   <h1>경복궁 타임워크</h1>
-  <div class="sub">v0.3 — 여섯 시대를 걸어서 여행하는 경복궁 · 실측 스캔 탑재</div>
+  <div class="sub">v0.6 — 여섯 시대를 걸어서 여행하는 경복궁 · 실측 스캔 · 왕의 하루 투어</div>
 </div>
 <div class="hud" id="eraLabel"><div class="year"></div><div class="name"></div></div>
 <div class="hud" id="badge"></div>
@@ -102,6 +113,17 @@
 <button id="infoBtn" title="이 시대의 기록">ⓘ</button>
 <button id="shareBtn" title="이 장면 링크 복사">🔗</button>
 <button id="mapBtn" title="미니맵 접기/펼치기">🗺</button>
+<button id="tourBtn" title="가이드 투어 — 왕의 하루">📜</button>
+<button id="soundBtn" title="소리 켜기/끄기">🔊</button>
+<div id="subtitle">
+  <div class="who">史官 — 왕의 하루</div>
+  <div class="txt"></div>
+  <div class="ctl">
+    <button id="subPrev">◂ 이전</button>
+    <button id="subNext">다음 ▸</button>
+    <button id="subExit">✕ 나가기</button>
+  </div>
+</div>
 <div id="card"></div>
 <div id="scanNote"></div>
 <div id="toast"></div>
@@ -112,6 +134,7 @@
 <script>%%THREE%%</script>
 <script>%%LOADERS%%</script>
 <script>%%PROPS%%</script>
+<script>%%FIGURES%%</script>
 <script>%%APP%%</script>
 </body>
 </html>

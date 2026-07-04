@@ -79,6 +79,9 @@ def build(scan_set: list) -> str:
     cards_path = os.path.join(SRC, "building_cards.json")
     if os.path.exists(cards_path):
         app = app.replace("/*__BCARDS__*/[]", read(cards_path))
+    tour_path = os.path.join(SRC, "tour_script.json")
+    if os.path.exists(tour_path):
+        app = app.replace("/*__TOUR__*/null", read(tour_path))
     html = html.replace("%%THREE%%", read(os.path.join(SRC, "three.min.js")))
     loaders = read(os.path.join(VENDOR, "GLTFLoader.js"))
     for f in POSTFX_FILES:
@@ -86,6 +89,8 @@ def build(scan_set: list) -> str:
     html = html.replace("%%LOADERS%%", loaders)
     props_path = os.path.join(SRC, "props.js")
     html = html.replace("%%PROPS%%", read(props_path) if os.path.exists(props_path) else "window.PROPS={};")
+    figures_path = os.path.join(SRC, "figures.js")
+    html = html.replace("%%FIGURES%%", read(figures_path) if os.path.exists(figures_path) else "window.FIGURES=null;")
     return html.replace("%%APP%%", app)
 
 full = build(SET_FULL)
