@@ -1,0 +1,11 @@
+# 원본 대용량 데이터 — 재다운로드 가능 (경로·URL은 각 MANIFEST.md와 src/fetch_more_scans.sh 참조)
+data/02_3d-assets/**/*.zip
+data/02_3d-assets/**/*.fbx
+data/02_3d-assets/근정문_근정전-일대_data.go.kr/extracted/
+data/02_3d-assets/extra/
+data/01_documents/*.pdf
+data/05_reports/*.pdf
+# 작업 부산물
+prototype/src/*.bak
+*.bak
+.DS_Store

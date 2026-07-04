@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>경복궁 타임워크 — 시제품</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#000;
+    font-family:"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif; }
+  #gl { position:fixed; inset:0; width:100%; height:100%; display:block; cursor:grab; touch-action:none; }
+  #gl.dragging { cursor:grabbing; }
+  #fade { position:fixed; inset:0; background:#000; opacity:0; pointer-events:none; transition:opacity .28s ease; z-index:5; }
+
+  .hud { position:fixed; z-index:10; color:#fff; }
+  #title { top:20px; left:22px; text-shadow:0 1px 8px rgba(0,0,0,.55); }
+  #title h1 { font-size:17px; font-weight:700; letter-spacing:.02em; }
+  #title .sub { font-size:12px; opacity:.75; margin-top:3px; }
+  #eraLabel { top:20px; right:22px; text-align:right; text-shadow:0 1px 8px rgba(0,0,0,.55); }
+  #eraLabel .year { font-size:34px; font-weight:800; letter-spacing:.03em; font-variant-numeric:tabular-nums; }
+  #eraLabel .name { font-size:12.5px; opacity:.85; margin-top:2px; }
+
+  #nodes { bottom:96px; left:50%; transform:translateX(-50%); display:flex; gap:8px; }
+  .nodeBtn { border:1px solid rgba(255,255,255,.35); background:rgba(20,20,26,.55);
+    color:#fff; padding:9px 16px; border-radius:999px; font-size:13.5px; cursor:pointer;
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); transition:all .18s; }
+  .nodeBtn.active { background:rgba(255,255,255,.92); color:#111; font-weight:700; border-color:transparent; }
+
+  #timeline { bottom:26px; left:50%; transform:translateX(-50%); width:min(560px,86vw); }
+  #timeline input { width:100%; -webkit-appearance:none; appearance:none; height:4px; border-radius:2px;
+    background:linear-gradient(90deg,#c98d4f,#9d9484,#5f93c8); outline:none; }
+  #timeline input::-webkit-slider-thumb { -webkit-appearance:none; width:22px; height:22px; border-radius:50%;
+    background:#fff; border:3px solid #1c1c22; box-shadow:0 2px 10px rgba(0,0,0,.5); cursor:pointer; }
+  #ticks { display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:#fff;
+    text-shadow:0 1px 6px rgba(0,0,0,.6); }
+  #ticks span { width:33%; }
+  #ticks span:nth-child(2){ text-align:center; } #ticks span:nth-child(3){ text-align:right; }
+
+  #infoBtn { bottom:96px; right:22px; width:40px; height:40px; border-radius:50%;
+    border:1px solid rgba(255,255,255,.4); background:rgba(20,20,26,.55); color:#fff;
+    font-size:18px; font-weight:700; cursor:pointer; backdrop-filter:blur(8px); }
+  #card { position:fixed; z-index:20; right:22px; bottom:150px; width:min(340px,88vw);
+    max-height:min(62vh,560px); overflow-y:auto; background:rgba(16,16,20,.92); color:#eee;
+    border:1px solid rgba(255,255,255,.14); border-radius:14px; padding:16px;
+    backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+    transform:translateY(12px); opacity:0; pointer-events:none; transition:all .22s ease; }
+  #card.open { transform:none; opacity:1; pointer-events:auto; }
+  #card h2 { font-size:15px; margin-bottom:8px; }
+  #card img { width:100%; border-radius:8px; margin:4px 0 6px; }
+  #card .cap { font-size:11px; color:#9a9a9a; margin-bottom:10px; line-height:1.5; }
+  #card p { font-size:13px; line-height:1.65; margin-bottom:10px; }
+  #card blockquote { font-size:13px; line-height:1.6; border-left:3px solid #c98d4f;
+    padding:2px 0 2px 10px; margin-bottom:10px; color:#f3e3cd; }
+  #card .src { font-size:11px; } #card .src a { color:#8fb8e8; }
+
+  #hint { bottom:26px; left:22px; font-size:12px; color:#fff; opacity:.8;
+    text-shadow:0 1px 6px rgba(0,0,0,.6); transition:opacity 1s; }
+  #credit { top:auto; bottom:6px; right:10px; font-size:10px; color:rgba(255,255,255,.45);
+    text-shadow:0 1px 4px rgba(0,0,0,.6); text-align:right; max-width:70vw; }
+  #disclaim { position:fixed; z-index:10; top:108px; right:22px; font-size:10.5px;
+    color:rgba(255,255,255,.55); text-align:right; text-shadow:0 1px 4px rgba(0,0,0,.5); }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="fade"></div>
+
+<div class="hud" id="title">
+  <h1>경복궁 타임워크</h1>
+  <div class="sub">시제품 v0.1 — 시대를 오가는 로드뷰</div>
+</div>
+<div class="hud" id="eraLabel"><div class="year">1888</div><div class="name">고종 중건기</div></div>
+<div class="hud" id="disclaim">본 장면은 시연용 일러스트 시안입니다 (고증 렌더 아님)</div>
+
+<div class="hud" id="nodes">
+  <button class="nodeBtn active" data-node="g">광화문 앞</button>
+  <button class="nodeBtn" data-node="j">근정전 앞마당</button>
+</div>
+
+<div class="hud" id="timeline">
+  <input id="slider" type="range" min="0" max="2000" value="0" step="1">
+  <div id="ticks"><span>1888 · 고종 중건기</span><span>1929 · 일제강점기</span><span>2026 · 현재</span></div>
+</div>
+
+<button class="hud" id="infoBtn" title="이 자리의 기록">ⓘ</button>
+<div id="card"></div>
+<div class="hud" id="hint">드래그로 둘러보기 · 슬라이더로 시대 이동 · 휠로 확대</div>
+<div class="hud" id="credit">자료: 국가유산청 · 국립중앙박물관 유리건판(공공누리 제1유형) · 국사편찬위원회 조선왕조실록</div>
+
+<script>
+"use strict";
+// ─── 파노라마 데이터 (빌드 시 삽입) ───
+const PANO = {
+  g: ["%%PANO_g_1888%%", "%%PANO_g_1929%%", "%%PANO_g_2026%%"],
+  j: ["%%PANO_j_1888%%", "%%PANO_j_1929%%", "%%PANO_j_2026%%"]
+};
+const CARD_IMG = {
+  g_0: "%%CARD_g_1888%%", g_1: "%%CARD_g_1929%%",
+  j_0: "%%CARD_j_1888%%", j_1: "%%CARD_j_1929%%"
+};
+const ERA_META = [
+  { year: "1888", name: "고종 중건기" },
+  { year: "1929", name: "일제강점기" },
+  { year: "2026", name: "현재" }
+];
+const CARDS = {
+  g_0: { t: "광화문 — 고종 중건기 (19세기 말)",
+    q: "“300년 동안 미처 하지 못하던 일을 이렇게 완공하였으니, 그 기쁘고 다행한 마음을 이루 다 말할 수 있겠는가?” — 고종, 1868년 경복궁 이어(移御) 때",
+    p: "1865년 신정왕후의 하교로 중건이 시작되어 약 40개월 만인 1868년 완공되었습니다. 광화문 앞으로는 관청 거리인 육조거리가 뻗어 있었습니다.",
+    cap: "사진: 이전(移轉) 전 원위치의 광화문, 1914년 촬영 유리건판 (국립중앙박물관, 공공누리 제1유형)",
+    src: ["고종실록 1868.7.2 기사", "https://sillok.history.go.kr/id/kza_10507002_001"] },
+  g_1: { t: "광화문 자리 — 1929년",
+    q: "",
+    p: "1915년 조선물산공진회를 명분으로 전각 4천여 칸이 철거되고, 1926년경 조선총독부 청사가 흥례문 자리에 들어섰습니다. 광화문은 “청사를 가린다”는 이유로 1926~27년경 건춘문 북쪽으로 옮겨졌고, 1929년에는 이곳에서 조선박람회가 열렸습니다.",
+    cap: "사진: 1929년 조선박람회 정문 일대 (퍼블릭 도메인)",
+    src: ["국가유산청 훼철 연표(월간 국가유산사랑)", "https://www.cha.go.kr/cop/bbs/selectBoardArticle.do?nttId=5136&bbsId=BBSMSTR_1008"] },
+  g_2: { t: "광화문 — 현재",
+    q: "",
+    p: "콘크리트 재건(1968)을 거쳐 2010년 원위치·목구조로 복원되었고, 2023년에는 월대와 현판까지 복원되어 지금의 모습이 되었습니다. 경복궁 2차 복원정비사업은 2045년까지 이어집니다.",
+    cap: "",
+    src: ["국가유산청 궁능유적본부 — 경복궁", "https://royal.khs.go.kr/ROYAL/contents/R101010000.do"] },
+  j_0: { t: "근정전 — 고종 중건기",
+    q: "“근정전에 나아가 진하를 받고 반사(頒赦)하였다.” — 고종실록, 1887년 정월 신정왕후 팔순 진하례",
+    p: "지금 서 있는 근정전이 바로 1867년 중건 당시의 건물(국보)입니다. 1887년 정월에는 이 마당에서 문무백관이 도열한 팔순 진하례가 열렸습니다 — 어좌 착석, 치사·전문 봉정, 백관 진하, 사면 반포의 순서였습니다.",
+    cap: "사진: 근정전 정면, 1910년대 유리건판 — 건물은 고종대 원형 (국립중앙박물관, 공공누리 제1유형)",
+    src: ["고종실록 1887.1.1 기사", "https://sillok.history.go.kr/id/kza_12401001_001"] },
+  j_1: { t: "근정전 — 1929년 조선박람회",
+    q: "",
+    p: "1915년 공진회 때 궁 전각 4천여 칸이 철거된 뒤, 1929년 조선박람회에서는 근정전 일대가 행사장으로 쓰였습니다. 마당 남쪽 너머로는 조선총독부 청사의 돔이 궁을 내려다보고 있었습니다.",
+    cap: "사진: 1929년 조선박람회 당시 식장으로 쓰인 근정전 (퍼블릭 도메인)",
+    src: ["국가기록원 — 경복궁", "https://theme.archives.go.kr/next/koreaOfRecord/royalPalace.do"] },
+  j_2: { t: "근정전 — 현재",
+    q: "",
+    p: "근정전은 1867년 건물이 그대로 남아 국보로 지정되어 있습니다. 마당의 품계석과 박석, 둘레의 회랑과 함께 경복궁에서 가장 온전한 법전 공간을 이루고 있습니다.",
+    cap: "",
+    src: ["국가유산청 궁능유적본부 — 경복궁", "https://royal.khs.go.kr/ROYAL/contents/R101010000.do"] }
+};
+
+// ─── WebGL 파노라마 뷰어 ───
+const canvas = document.getElementById("gl");
+const gl = canvas.getContext("webgl", { antialias: false });
+const VS = "attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}";
+const FS = `
+precision highp float;
+uniform sampler2D tA,tB; uniform float m,yaw,pitch,fov,aspect; uniform vec2 res;
+const float PI=3.141592653589793;
+void main(){
+  vec2 ndc = gl_FragCoord.xy/res*2.-1.;
+  float t = tan(fov*.5);
+  vec3 d = normalize(vec3(ndc.x*t*aspect, ndc.y*t, -1.));
+  float cp=cos(pitch), sp=sin(pitch);
+  d = vec3(d.x, d.y*cp - d.z*sp, d.y*sp + d.z*cp);
+  float cy=cos(yaw), sy=sin(yaw);
+  d = vec3(d.x*cy + d.z*sy, d.y, -d.x*sy + d.z*cy);
+  float lon = atan(d.x, -d.z), lat = asin(clamp(d.y,-1.,1.));
+  vec2 st = vec2(lon/(2.*PI)+.5, .5 - lat/PI);
+  gl_FragColor = mix(texture2D(tA,st), texture2D(tB,st), m);
+}`;
+function sh(type, src){ const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(s); return s; }
+const prog = gl.createProgram();
+gl.attachShader(prog, sh(gl.VERTEX_SHADER,VS)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER,FS));
+gl.linkProgram(prog); gl.useProgram(prog);
+gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+const aLoc = gl.getAttribLocation(prog,"a");
+gl.enableVertexAttribArray(aLoc); gl.vertexAttribPointer(aLoc,2,gl.FLOAT,false,0,0);
+const U = {}; ["tA","tB","m","yaw","pitch","fov","aspect","res"].forEach(n=>U[n]=gl.getUniformLocation(prog,n));
+gl.uniform1i(U.tA,0); gl.uniform1i(U.tB,1);
+
+const textures = { g:[null,null,null], j:[null,null,null] };
+let loaded = 0, total = 6;
+function makeTex(img){
+  const tx = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tx);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,img);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  return tx;
+}
+Object.keys(PANO).forEach(node => PANO[node].forEach((src,i) => {
+  const im = new Image();
+  im.onload = () => { textures[node][i]=makeTex(im); if(++loaded===total) requestAnimationFrame(frame); };
+  im.src = src;
+}));
+
+// ─── 상태 · 입력 ───
+let node="g", eraT=0, yaw=0, pitch=0, fov=75*Math.PI/180, drift=true;
+function resize(){
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  canvas.width = innerWidth*dpr; canvas.height = innerHeight*dpr;
+  gl.viewport(0,0,canvas.width,canvas.height);
+}
+addEventListener("resize", resize); resize();
+
+let px=0, py=0, down=false;
+canvas.addEventListener("pointerdown", e=>{ down=true; drift=false; px=e.clientX; py=e.clientY;
+  canvas.classList.add("dragging"); canvas.setPointerCapture(e.pointerId);
+  document.getElementById("hint").style.opacity=0; });
+canvas.addEventListener("pointermove", e=>{ if(!down) return;
+  const s = fov/innerHeight;
+  yaw -= (e.clientX-px)*s; pitch += (e.clientY-py)*s;
+  pitch = Math.max(-1.25, Math.min(1.25, pitch)); px=e.clientX; py=e.clientY; });
+canvas.addEventListener("pointerup", ()=>{ down=false; canvas.classList.remove("dragging"); });
+canvas.addEventListener("wheel", e=>{ e.preventDefault();
+  fov = Math.max(38*Math.PI/180, Math.min(95*Math.PI/180, fov + e.deltaY*0.0016)); }, {passive:false});
+
+// ─── UI ───
+const slider = document.getElementById("slider");
+const card = document.getElementById("card");
+const eraYear = document.querySelector("#eraLabel .year");
+const eraName = document.querySelector("#eraLabel .name");
+function eraIdx(){ return Math.min(2, Math.round(eraT)); }
+function refreshEraLabel(){
+  const lo = Math.min(2, Math.floor(eraT)), frac = eraT - lo;
+  const m = frac < .5 ? ERA_META[lo] : ERA_META[Math.min(2, lo+1)];
+  eraYear.textContent = m.year; eraName.textContent = m.name;
+}
+function renderCard(){
+  const key = node + "_" + eraIdx();
+  const c = CARDS[key], img = CARD_IMG[key];
+  card.innerHTML = "<h2>"+c.t+"</h2>"
+    + (c.q ? "<blockquote>"+c.q+"</blockquote>" : "")
+    + "<p>"+c.p+"</p>"
+    + (img ? "<img src='"+img+"' alt=''><div class='cap'>"+c.cap+"</div>" : "")
+    + "<div class='src'>출처: <a href='"+c.src[1]+"' target='_blank' rel='noopener'>"+c.src[0]+"</a></div>";
+}
+slider.addEventListener("input", ()=>{ eraT = slider.value/1000; refreshEraLabel();
+  if(card.classList.contains("open")) renderCard(); });
+document.getElementById("infoBtn").addEventListener("click", ()=>{
+  if(!card.classList.contains("open")) renderCard();
+  card.classList.toggle("open"); });
+document.querySelectorAll(".nodeBtn").forEach(b => b.addEventListener("click", ()=>{
+  if(b.dataset.node === node) return;
+  const fade = document.getElementById("fade");
+  fade.style.opacity = 1;
+  setTimeout(()=>{
+    node = b.dataset.node;
+    document.querySelectorAll(".nodeBtn").forEach(x=>x.classList.toggle("active", x===b));
+    if(card.classList.contains("open")) renderCard();
+    fade.style.opacity = 0;
+  }, 300);
+}));
+
+// ─── 렌더 루프 ───
+function frame(){
+  if(drift) yaw += 0.00045;
+  const lo = Math.min(2, Math.floor(eraT));
+  const hi = Math.min(2, lo+1);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textures[node][lo]);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, textures[node][hi]);
+  gl.uniform1f(U.m, eraT-lo);
+  gl.uniform1f(U.yaw, yaw); gl.uniform1f(U.pitch, pitch);
+  gl.uniform1f(U.fov, fov); gl.uniform1f(U.aspect, canvas.width/canvas.height);
+  gl.uniform2f(U.res, canvas.width, canvas.height);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  requestAnimationFrame(frame);
+}
+refreshEraLabel();
+</script>
+</body>
+</html>

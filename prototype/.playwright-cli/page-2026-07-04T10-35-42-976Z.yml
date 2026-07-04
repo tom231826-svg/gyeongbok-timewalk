@@ -1,0 +1,37 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - heading "경복궁 타임워크" [level=1] [ref=e4]
+    - generic [ref=e5]: v0.3 — 여섯 시대를 걸어서 여행하는 경복궁 · 실측 스캔 탑재
+  - generic [ref=e6]:
+    - generic [ref=e7]: "1888"
+    - generic [ref=e8]: 고종 중건기
+  - generic [ref=e9]: 고증 A·B — 북궐도형 실측 배치 + 회랑 실측 스캔, 일부 추정
+  - generic [ref=e10]:
+    - button "1395 태조 창건" [ref=e11] [cursor=pointer]:
+      - generic [ref=e12]: "1395"
+      - generic [ref=e13]: 태조 창건
+    - button "15세기 세종 시대" [ref=e14] [cursor=pointer]:
+      - generic [ref=e15]: 15세기
+      - generic [ref=e16]: 세종 시대
+    - button "1592~ 폐허 273년" [ref=e17] [cursor=pointer]:
+      - generic [ref=e18]: 1592~
+      - generic [ref=e19]: 폐허 273년
+    - button "1888 고종 중건" [ref=e20] [cursor=pointer]:
+      - generic [ref=e21]: "1888"
+      - generic [ref=e22]: 고종 중건
+    - button "1929 일제강점기" [ref=e23] [cursor=pointer]:
+      - generic [ref=e24]: "1929"
+      - generic [ref=e25]: 일제강점기
+    - button "2026 현재" [ref=e26] [cursor=pointer]:
+      - generic [ref=e27]: "2026"
+      - generic [ref=e28]: 현재
+  - button "ⓘ" [ref=e29] [cursor=pointer]
+  - button "🔗" [ref=e30] [cursor=pointer]
+  - button "🗺" [ref=e31] [cursor=pointer]
+  - generic: 실측 스캔 3/3 로드 — 국가유산청 3D 원형데이터
+  - generic:
+    - text: 🖱 드래그 — 둘러보기 · W A S D — 걷기 (Shift 달리기)
+    - text: 🔢 숫자 1~6 — 광화문·흥례문·영제교·근정문·근정전·경회루 바로가기
+    - text: 🖱 더블클릭 · 미니맵 클릭 — 그 지점으로 이동
+    - text: ⏳ 아래 시대 버튼 — 시간 여행 · 🔗 — 이 장면 공유
+  - generic [ref=e32]: "자료: 국가유산청 · 국립중앙박물관 유리건판(공공누리 제1유형) · 국사편찬위원회 조선왕조실록 | 장면은 문헌·도면 기반 시안이며 고증 렌더가 아닙니다"
