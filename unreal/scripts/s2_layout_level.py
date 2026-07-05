@@ -147,19 +147,17 @@ def place_building(subsystem, b):
         return False
     actor.set_actor_label(name)
 
-    # 2) 회전 반영된 바운딩박스로 긴 축(수평) 측정 -> 균일 스케일
+    # 2) 균일 ×100 — 검측(assets_manifest.json) 결과 스캔 9개가 전부 1:100으로 일관됨.
+    #    targetLenM(웹 배치의 어림값)은 검증 로그로만 쓰고, 실측 비율은 절대 왜곡하지 않는다.
+    UNIFORM_SCALE = 100.0
+    actor.set_actor_scale3d(unreal.Vector(UNIFORM_SCALE, UNIFORM_SCALE, UNIFORM_SCALE))
     _, extent = get_bounds(actor)
-    full_x = extent.x * 2.0
-    full_y = extent.y * 2.0
-    long_axis = max(full_x, full_y)
-    target_len_cm = b["targetLenM"] * 100.0
-    if long_axis > 1e-3 and target_len_cm > 1e-3:
-        scale = target_len_cm / long_axis
-    else:
-        scale = 1.0
-        log_warn("'%s' 스케일 계산 불가(long=%.3f, target=%.3f) — 1.0 사용"
-                 % (name, long_axis, target_len_cm))
-    actor.set_actor_scale3d(unreal.Vector(scale, scale, scale))
+    long_axis_m = max(extent.x, extent.y) * 2.0 / 100.0
+    expected = b["targetLenM"]
+    scale = UNIFORM_SCALE
+    if expected > 1e-3 and abs(long_axis_m - expected) / expected > 0.15:
+        log_warn("'%s' 크기 확인: 스캔 실측 %.1fm vs 예상 %.1fm (스캔 값을 신뢰함 — 예상값만 갱신 요망)"
+                 % (name, long_axis_m, expected))
 
     # 3) 스케일 반영된 바운딩박스로 재배치: 수평중심=목표, 바닥 Z=0
     origin, extent = get_bounds(actor)
@@ -168,8 +166,8 @@ def place_building(subsystem, b):
     delta_z = extent.z - origin.z  # 최저점(origin.z - extent.z) 을 0 으로
     actor.set_actor_location(unreal.Vector(delta_x, delta_y, delta_z), False, True)
 
-    log("[배치] '%s'  loc=(%.0f, %.0f) scale=%.4f yaw=%.1f  (긴축 %.2fm→%.2fm)"
-        % (name, target.x, target.y, scale, yaw, long_axis / 100.0, b["targetLenM"]))
+    log("[배치] '%s'  loc=(%.0f, %.0f) scale=×%.0f yaw=%.1f  (긴축 실측 %.1fm)"
+        % (name, target.x, target.y, scale, yaw, long_axis_m))
     return True
 
 
