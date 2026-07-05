@@ -1,0 +1,16 @@
+{
+  "convention": "world meters: x=east, z=south(north=-z). UE: cm, +X=north, +Y=east, +Z=up. 변환: UE.X=-z*100, UE.Y=x*100. yawDeg는 웹 빌드와 동일 기준(0=긴축이 동서).",
+  "origin_note": "월드 원점(0,0)=광화문 자리. 근정전 마당 중심은 대략 (0,-294).",
+  "buildings": [
+    { "name": "seowollang",   "fbx": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/근정문_근정전-일대_data.go.kr/extracted/seowollang.fbx",   "pos": [-37, -228], "yawDeg": 0,  "targetLenM": 52 },
+    { "name": "dongwollang",  "fbx": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/근정문_근정전-일대_data.go.kr/extracted/dongwollang.fbx",  "pos": [37, -228],  "yawDeg": 0,  "targetLenM": 52 },
+    { "name": "donghaenggak", "fbx": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/근정문_근정전-일대_data.go.kr/extracted/donghaenggak.fbx", "pos": [63, -294],  "yawDeg": 90, "targetLenM": 132 },
+    { "name": "seohaenggak",  "fbx": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/extra/seohaenggak.fbx",  "pos": [-63, -294], "yawDeg": 90, "targetLenM": 132 },
+    { "name": "sajeongmun",   "fbx": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/extra/sajeongmun.fbx",   "pos": [0, -362],   "yawDeg": 0,  "targetLenM": 20 },
+    { "name": "gyeonghoeru",  "fbx": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/extra/gyeonghoeru.fbx",  "pos": [-128, -352],"yawDeg": 0,  "targetLenM": 36, "optional": true, "note": "마당 밖 서측 원경용 — 지붕 너머로 보임" },
+    { "name": "geunjeongjeon","fbx": "PENDING",  "pos": [0, -318],   "yawDeg": 0,  "targetLenM": 34, "pending": true, "note": "국가유산청 이용신청 승인 대기 — 도착 시 fbx 경로만 채우고 s1·s2 재실행" },
+    { "name": "geunjeongmun", "fbx": "PENDING",  "pos": [0, -228],   "yawDeg": 0,  "targetLenM": 22, "pending": true, "note": "근정문 본체 — digital.khs.go.kr 카탈로그에 별도 존재, 신청 시 함께 요청" }
+  ],
+  "courtyard": { "center": [0, -294], "size": [126, 132], "ground": "박석(스캔 텍스처 타일화 예정, 임시는 밝은 화강암 머티리얼)" },
+  "notes": "targetLenM = 배치 시 건물 긴 축 실측 길이(m). FBX 원본 스케일 제각각(약 1/100) → 임포트 후 바운딩박스 긴 축을 이 값에 맞춰 균일 스케일. 북행각(마당 북서·북동 구간) 스캔 미확보 — 카메라 구도에서 회피하거나 추후 신청."
+}

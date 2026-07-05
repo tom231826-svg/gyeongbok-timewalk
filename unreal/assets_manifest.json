@@ -1,0 +1,396 @@
+{
+  "generated": "2026-07-06",
+  "tool": "Blender 5.1.2 headless (bpy.ops.wm.fbx_import)",
+  "note": "bbox/longAxisLen are in meters, as imported by Blender's default FBX unit conversion (FBX UnitScaleFactor=1.0 declared in all 9 source files). See scale anomaly note below.",
+  "assets": [
+    {
+      "name": "seowollang",
+      "fbx": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/근정문_근정전-일대_data.go.kr/extracted/seowollang.fbx",
+      "meshes": 1,
+      "objects_total": 1,
+      "triangles": 174163,
+      "textures": [
+        {
+          "name": "GJM_W_WR_L_TXTR.jpg",
+          "size": [
+            8192,
+            8192
+          ],
+          "packed": true,
+          "source": "FILE",
+          "filepath": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/근정문_근정전-일대_data.go.kr/extracted/GJM_W_WR_L_TXTR.jpg"
+        }
+      ],
+      "materials": [
+        "GJM_W_WR_L"
+      ],
+      "bbox": [
+        0.5404506474733353,
+        0.17503486573696136,
+        0.09446609020233154
+      ],
+      "bboxMin": [
+        -0.6094516515731812,
+        -0.11054547131061554,
+        0.8184847235679626
+      ],
+      "bboxMax": [
+        -0.06900100409984589,
+        0.06448939442634583,
+        0.9129508137702942
+      ],
+      "lowestPoint": 0.8184847235679626,
+      "longAxisLen": 0.5404506474733353
+    },
+    {
+      "name": "dongwollang",
+      "fbx": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/근정문_근정전-일대_data.go.kr/extracted/dongwollang.fbx",
+      "meshes": 1,
+      "objects_total": 1,
+      "triangles": 256583,
+      "textures": [
+        {
+          "name": "GJM_E_WR_L_TXTR.jpg",
+          "size": [
+            8192,
+            8192
+          ],
+          "packed": true,
+          "source": "FILE",
+          "filepath": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/근정문_근정전-일대_data.go.kr/extracted/GJM_E_WR_L_TXTR.jpg"
+        }
+      ],
+      "materials": [
+        "GJM_E_WR_L"
+      ],
+      "bbox": [
+        0.5331863760948181,
+        0.1750241294503212,
+        0.09806203842163086
+      ],
+      "bboxMin": [
+        0.06553119421005249,
+        -0.10871663689613342,
+        0.8176324367523193
+      ],
+      "bboxMax": [
+        0.5987175703048706,
+        0.06630749255418777,
+        0.9156944751739502
+      ],
+      "lowestPoint": 0.8176324367523193,
+      "longAxisLen": 0.5331863760948181
+    },
+    {
+      "name": "donghaenggak",
+      "fbx": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/근정문_근정전-일대_data.go.kr/extracted/donghaenggak.fbx",
+      "meshes": 2,
+      "objects_total": 2,
+      "triangles": 4485441,
+      "textures": [
+        {
+          "name": "GJM_E_HG_in1_TXTR.jpg",
+          "size": [
+            8192,
+            8192
+          ],
+          "packed": true,
+          "source": "FILE",
+          "filepath": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/근정문_근정전-일대_data.go.kr/extracted/GJM_E_HG_in1_TXTR.jpg"
+        },
+        {
+          "name": "GJM_E_HG_TXTR.jpg",
+          "size": [
+            8192,
+            8192
+          ],
+          "packed": true,
+          "source": "FILE",
+          "filepath": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/근정문_근정전-일대_data.go.kr/extracted/GJM_E_HG_TXTR.jpg"
+        }
+      ],
+      "materials": [
+        "GJM_E_HG",
+        "GJM_E_HG_in1"
+      ],
+      "bbox": [
+        1.4055594429373741,
+        0.20058594644069672,
+        0.12333929538726807
+      ],
+      "bboxMin": [
+        0.039507605135440826,
+        -0.0932677611708641,
+        1.2812480926513672
+      ],
+      "bboxMax": [
+        1.445067048072815,
+        0.10731818526983261,
+        1.4045873880386353
+      ],
+      "lowestPoint": 1.2812480926513672,
+      "longAxisLen": 1.4055594429373741
+    },
+    {
+      "name": "seohaenggak",
+      "fbx": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/extra/seohaenggak.fbx",
+      "meshes": 2,
+      "objects_total": 2,
+      "triangles": 9227733,
+      "textures": [
+        {
+          "name": "GJM_W_HG_TXTR.jpg",
+          "size": [
+            8192,
+            8192
+          ],
+          "packed": true,
+          "source": "FILE",
+          "filepath": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/extra/GJM_W_HG_TXTR.jpg"
+        },
+        {
+          "name": "근정문_서행각1_TXTR.jpg",
+          "size": [
+            8192,
+            8192
+          ],
+          "packed": true,
+          "source": "FILE",
+          "filepath": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/extra/근정문_서행각1_TXTR.jpg"
+        }
+      ],
+      "materials": [
+        "GJM_W_HG",
+        "근정문_서행각1"
+      ],
+      "bbox": [
+        1.4089408554136753,
+        0.20805267244577408,
+        0.113869309425354
+      ],
+      "bboxMin": [
+        -1.4593523740768433,
+        -0.09132403880357742,
+        1.2890914678573608
+      ],
+      "bboxMax": [
+        -0.050411518663167953,
+        0.11672863364219666,
+        1.4029607772827148
+      ],
+      "lowestPoint": 1.2890914678573608,
+      "longAxisLen": 1.4089408554136753
+    },
+    {
+      "name": "heung_e",
+      "fbx": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/extra/heung_e.fbx",
+      "meshes": 1,
+      "objects_total": 1,
+      "triangles": 6391297,
+      "textures": [
+        {
+          "name": "HRM_E_HG_TXTR.tga",
+          "size": [
+            8192,
+            8192
+          ],
+          "packed": true,
+          "source": "FILE",
+          "filepath": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/extra/HRM_E_HG_TXTR.tga"
+        }
+      ],
+      "materials": [
+        "HRM_E_HG"
+      ],
+      "bbox": [
+        0.12787365913391113,
+        0.8782600164413452,
+        0.10008960962295532
+      ],
+      "bboxMin": [
+        0.4569460153579712,
+        -0.45225510001182556,
+        0.331145316362381
+      ],
+      "bboxMax": [
+        0.5848196744918823,
+        0.42600491642951965,
+        0.4312349259853363
+      ],
+      "lowestPoint": 0.331145316362381,
+      "longAxisLen": 0.8782600164413452
+    },
+    {
+      "name": "heung_w",
+      "fbx": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/extra/heung_w.fbx",
+      "meshes": 1,
+      "objects_total": 1,
+      "triangles": 6275893,
+      "textures": [
+        {
+          "name": "HRM_W_HG_TXTR.tga",
+          "size": [
+            8192,
+            8192
+          ],
+          "packed": true,
+          "source": "FILE",
+          "filepath": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/extra/HRM_W_HG_TXTR.tga"
+        }
+      ],
+      "materials": [
+        "HRM_W_HG"
+      ],
+      "bbox": [
+        0.12250971794128418,
+        0.6288235187530518,
+        0.09681877493858337
+      ],
+      "bboxMin": [
+        -0.599689245223999,
+        -0.32639080286026,
+        0.2057156264781952
+      ],
+      "bboxMax": [
+        -0.47717952728271484,
+        0.30243271589279175,
+        0.30253440141677856
+      ],
+      "lowestPoint": 0.2057156264781952,
+      "longAxisLen": 0.6288235187530518
+    },
+    {
+      "name": "sajeongmun",
+      "fbx": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/extra/sajeongmun.fbx",
+      "meshes": 1,
+      "objects_total": 1,
+      "triangles": 2476496,
+      "textures": [
+        {
+          "name": "SJM_TXTR.jpg",
+          "size": [
+            8192,
+            8192
+          ],
+          "packed": true,
+          "source": "FILE",
+          "filepath": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/extra/SJM_TXTR.jpg"
+        }
+      ],
+      "materials": [
+        "SJM"
+      ],
+      "bbox": [
+        0.13313785940408707,
+        0.11154092842480168,
+        0.08943510428071022
+      ],
+      "bboxMin": [
+        -0.0676472932100296,
+        -0.11077985167503357,
+        -0.04267667606472969
+      ],
+      "bboxMax": [
+        0.06549056619405746,
+        0.0007610767497681081,
+        0.04675842821598053
+      ],
+      "lowestPoint": -0.04267667606472969,
+      "longAxisLen": 0.13313785940408707
+    },
+    {
+      "name": "gyeonghoeru",
+      "fbx": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/extra/gyeonghoeru.fbx",
+      "meshes": 1,
+      "objects_total": 1,
+      "triangles": 5154279,
+      "textures": [
+        {
+          "name": "GHR_L_TXTR.tga",
+          "size": [
+            8192,
+            8192
+          ],
+          "packed": true,
+          "source": "FILE",
+          "filepath": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/extra/GHR_L_TXTR.tga"
+        }
+      ],
+      "materials": [
+        "GHR_L"
+      ],
+      "bbox": [
+        0.38900628685951233,
+        0.42596807330846786,
+        0.22956137359142303
+      ],
+      "bboxMin": [
+        -0.19903655350208282,
+        -0.3136352300643921,
+        -0.11183071881532669
+      ],
+      "bboxMax": [
+        0.1899697333574295,
+        0.11233284324407578,
+        0.11773065477609634
+      ],
+      "lowestPoint": -0.11183071881532669,
+      "longAxisLen": 0.42596807330846786
+    },
+    {
+      "name": "gangnyeongjeon",
+      "fbx": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/extra/gangnyeongjeon.fbx",
+      "meshes": 2,
+      "objects_total": 2,
+      "triangles": 6491107,
+      "textures": [
+        {
+          "name": "CA_경복궁_강녕전_실측모델링_원본_TXTR.jpg",
+          "size": [
+            8192,
+            8192
+          ],
+          "packed": true,
+          "source": "FILE",
+          "filepath": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/extra/CA_경복궁_강녕전_실측모델링_원본_TXTR.jpg"
+        },
+        {
+          "name": "GNJ_in_TXTR.jpg",
+          "size": [
+            8192,
+            8192
+          ],
+          "packed": true,
+          "source": "FILE",
+          "filepath": "/Users/junkim/projects/gyeongbok-timewalk/data/02_3d-assets/extra/GNJ_in_TXTR.jpg"
+        }
+      ],
+      "materials": [
+        "CA_경복궁_강녕전_실측모델링_원본",
+        "GNJ_in"
+      ],
+      "bbox": [
+        0.3052384778857231,
+        0.4219522774219513,
+        0.14915046840906143
+      ],
+      "bboxMin": [
+        -0.196560338139534,
+        -0.2840750515460968,
+        -0.07131334394216537
+      ],
+      "bboxMax": [
+        0.10867813974618912,
+        0.1378772258758545,
+        0.07783712446689606
+      ],
+      "lowestPoint": -0.07131334394216537,
+      "longAxisLen": 0.4219522774219513
+    }
+  ],
+  "totals": {
+    "triangles": 40932992,
+    "meshes": 12,
+    "assets_count": 9
+  }
+}
