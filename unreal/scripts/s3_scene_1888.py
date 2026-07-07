@@ -122,17 +122,17 @@ def clean_template_scene(subsystem):
 # ---------------------------------------------------------------------------
 def spawn_sun(subsystem):
     # 서쪽 저녁 태양: forward(빛 진행방향)가 +Y(동)+아래를 향하면 광원은 서쪽에 위치.
-    # yaw=95 -> 대략 동남동으로 진행(광원=서북서), pitch=-14 -> 낮은 고도(긴 그림자).
-    rotation = unreal.Rotator(roll=0.0, pitch=-14.0, yaw=95.0)
+    # yaw=95 -> 대략 동남동으로 진행(광원=서북서), pitch=-8 -> 지평선 직전(골든아워, 긴 그림자).
+    rotation = unreal.Rotator(roll=0.0, pitch=-8.0, yaw=95.0)
     sun = subsystem.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(0, 0, 1500), rotation)
     sun.set_actor_label("Sun_1888")
     set_movable(sun)
 
     comp = sun.get_component_by_class(unreal.DirectionalLightComponent)
     if comp:
-        set_prop(comp, "intensity", 3.5)          # lux, 저녁이라 약하게
+        set_prop(comp, "intensity", 4.0)          # lux, 저녁이라 약하게
         set_prop(comp, "use_temperature", True)
-        set_prop(comp, "temperature", 4700.0)     # 따뜻한 노을 색온도
+        set_prop(comp, "temperature", 3900.0)     # 진한 노을 색온도(주황)
         set_prop(comp, "atmosphere_sun_light", True)      # SkyAtmosphere 태양으로 사용
         set_prop(comp, "atmosphere_sun_light_index", 0)
         set_prop(comp, "cast_shadows", True)
@@ -176,7 +176,7 @@ def spawn_height_fog(subsystem):
     fog.set_actor_label("HeightFog_1888")
     comp = fog.get_component_by_class(unreal.ExponentialHeightFogComponent)
     if comp:
-        set_prop(comp, "fog_density", 0.012)          # 옅게
+        set_prop(comp, "fog_density", 0.018)          # 옅은 저녁 헤이즈
         set_prop(comp, "fog_height_falloff", 0.2)
         set_prop(comp, "start_distance", 500.0)       # 5m 부터
         # 옅은 주황 헤이즈
@@ -202,8 +202,11 @@ def spawn_post_process(subsystem):
         except Exception as e:
             log_warn("PP '%s' 스킵: %s" % (value_name, e))
 
-    # 살짝 웜 화이트밸런스 (white_temp 낮추면 따뜻해짐)
-    pp("override_white_temp", "white_temp", 5200.0)
+    # 웜 화이트밸런스 — 주의: white_temp 는 "높일수록" 화면이 따뜻해짐 (기본 6500).
+    # (이전 5200 은 방향이 반대라 오히려 낮처럼 차갑게 나왔음 — 07-07 수정)
+    pp("override_white_temp", "white_temp", 7200.0)
+    # 노출을 살짝 어둡게 — 자동 노출이 노을의 어스름을 밝은 낮처럼 끌어올리는 것 방지
+    pp("override_auto_exposure_bias", "auto_exposure_bias", -0.5)
     # 블룸 약하게 (기본 0.675 -> 0.35)
     pp("override_bloom_intensity", "bloom_intensity", 0.35)
     # AO 강하게 (기본 0.5 -> 0.75)
