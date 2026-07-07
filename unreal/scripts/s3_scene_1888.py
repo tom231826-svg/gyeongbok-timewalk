@@ -174,7 +174,7 @@ def spawn_height_fog(subsystem):
     fog.set_actor_label("HeightFog_1888")
     comp = fog.get_component_by_class(unreal.ExponentialHeightFogComponent)
     if comp:
-        set_prop(comp, "fog_density", 0.018)          # 옅은 저녁 헤이즈
+        set_prop(comp, "fog_density", 0.009)          # 저녁 헤이즈 — 0.018은 2km 산을 지워버림(07-07)
         set_prop(comp, "fog_height_falloff", 0.2)
         set_prop(comp, "start_distance", 500.0)       # 5m 부터
         # 옅은 주황 헤이즈
