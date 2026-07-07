@@ -1,0 +1,281 @@
+{
+  "meta": {
+    "version": "0.1-draft",
+    "updated": "2026-07-07",
+    "purpose": "6시대 건물 단일 원본 레지스트리 — 웹·UE 공유. 시대별 건물 존재/부재·렌더 소스·고증 등급의 진실 원본. (설계 문서: 볼트 gyeongbok-era-structure-plan-2026-07-07.md)",
+    "derivedFrom": "prototype/src/app.js 의 place(..., eras) 호출 + SCANS 배열 (2026-07-07 기준) — 웹 v0.6 배치를 그대로 승격한 초안",
+    "coordinateConvention": "world meters: x=동, z=남(북=-z). 원점(0,0)=광화문. UE 변환: UE.X=-z*100, UE.Y=x*100 (layout_1888.json 과 동일)",
+    "eras": [
+      { "idx": 0, "yr": "1395", "nm": "태조 창건", "note": "약 390여 칸, 검소. 경회루 없음(1412 태종 건립). 도면 없음 — 전반 C 추정" },
+      { "idx": 1, "yr": "15세기", "nm": "세종 시대", "note": "확장. 경회루·집현전·흠경각. 문헌 기반 추정" },
+      { "idx": 2, "yr": "1592-1865", "nm": "폐허기", "note": "전소, 건물 0. 초석·월대 석조·경회루 돌기둥만 잔존. 273년" },
+      { "idx": 3, "yr": "1888", "nm": "고종 중건기", "note": "최대 규모 약 500동(7,700여 칸). 북궐도형 = 기준 도면. UE 수직절편의 대상 시대" },
+      { "idx": 4, "yr": "1929", "nm": "일제강점기", "note": "4,000여 칸 철거. 총독부(1926, 흥례문 자리)·광화문 이건·박람회 가설물" },
+      { "idx": 5, "yr": "2026", "nm": "현재", "note": "고종대의 약 41%(205동) 복원, ~2045 목표. 실측 스캔 9동 보유" }
+    ],
+    "sourceVocab": {
+      "scan": "실측 포토그래메트리 FBX (편집 불가, 나나이트 통짜 — 질감 담당)",
+      "khs": "digital.khs.go.kr 클린 에셋 (편집 가능 — 시대 변형의 기반)",
+      "proc": "절차 생성 모델 (웹 three.js 구현 존재)",
+      "proc-simple": "창건기용 단순화 매스 (도면 없음 — 추정임을 형태로 표현)",
+      "proc-ruin": "폐허 잔존물 (초석·석조)",
+      "sketchfab": "KHS_Asset 스케치팹 무료 소품 (glTF)"
+    },
+    "pendingAssets": "khs 소스는 이용신청 승인 대기: 근정전·근정문·광화문(+사정전·협문 추가 신청 권장). 승인 전까지 웹은 proc, UE는 해당 건물 생략(layout PENDING)",
+    "gradeVocab": { "A": "실측(스캔·현존)", "B": "문헌·도면·사진 기반(북궐도형·유리건판·연혁)", "C": "추정(도면 없음, 최소 상상 보완)" }
+  },
+  "buildings": [
+    {
+      "id": "gwanghwamun", "name": "광화문",
+      "existsInEras": [0, 1, 3, 4, 5],
+      "source": { "0": "proc-simple", "1": "proc", "3": "khs", "4": "proc", "5": "khs" },
+      "posByEra": { "default": [0, 0], "4": [150, -80] },
+      "yawByEra": { "default": 0, "4": 90 },
+      "material": { "3": "clean1888", "5": "raw2026" },
+      "grade": { "0": "C", "1": "C", "3": "B", "4": "B", "5": "A" },
+      "sourceRef": { "2": "연혁: 1592 소실", "4": "1927 총독부 청사 완공 후 동측 이건 — 유리건판·기록", "5": "2010 원위치 복원, 2023 월대 복원" }
+    },
+    {
+      "id": "heungnyemun", "name": "흥례문",
+      "existsInEras": [0, 1, 3, 5],
+      "source": { "0": "proc-simple", "1": "proc", "3": "proc", "5": "proc" },
+      "posByEra": { "default": [0, -135] },
+      "grade": { "0": "C", "1": "C", "3": "B", "5": "A" },
+      "sourceRef": { "4": "1915 조선물산공진회 준비로 철거 → 자리에 총독부(1926) — 기록", "5": "2001 복원" }
+    },
+    {
+      "id": "heung_w", "name": "흥례문 서행각",
+      "existsInEras": [0, 1, 3, 5],
+      "source": { "0": "proc-simple", "1": "proc", "3": "scan", "5": "scan" },
+      "posByEra": { "default": [-44, -135] },
+      "material": { "3": "clean1888", "5": "raw2026" },
+      "grade": { "0": "C", "1": "C", "3": "A", "5": "A" },
+      "sourceRef": { "4": "흥례문 권역과 함께 철거 — 기록" }
+    },
+    {
+      "id": "heung_e", "name": "흥례문 동행각",
+      "existsInEras": [0, 1, 3, 5],
+      "source": { "0": "proc-simple", "1": "proc", "3": "scan", "5": "scan" },
+      "posByEra": { "default": [44, -135] },
+      "material": { "3": "clean1888", "5": "raw2026" },
+      "grade": { "0": "C", "1": "C", "3": "A", "5": "A" },
+      "sourceRef": { "4": "흥례문 권역과 함께 철거 — 기록" }
+    },
+    {
+      "id": "yeongjegyo", "name": "영제교·금천",
+      "existsInEras": [0, 1, 2, 3, 5],
+      "source": { "0": "proc", "1": "proc", "2": "proc-ruin", "3": "proc", "5": "proc" },
+      "posByEra": { "default": [0, -176] },
+      "grade": { "0": "C", "1": "B", "2": "C", "3": "B", "5": "A" },
+      "sourceRef": { "4": "총독부 조성기 금천 복개·영제교 이설 — 기록(부재 처리는 연출 단순화)", "5": "2001 권역 복원" }
+    },
+    {
+      "id": "geunjeongmun", "name": "근정문",
+      "existsInEras": [0, 1, 3, 4, 5],
+      "source": { "0": "proc-simple", "1": "proc", "3": "khs", "4": "khs", "5": "khs" },
+      "posByEra": { "default": [0, -228] },
+      "material": { "3": "clean1888", "4": "weathered1929", "5": "raw2026" },
+      "grade": { "0": "C", "1": "C", "3": "A", "4": "A", "5": "A" },
+      "sourceRef": { "3": "북궐도형 + 현존(1867 중건 원형)", "4": "유리건판" }
+    },
+    {
+      "id": "seowollang", "name": "근정문 서월랑",
+      "existsInEras": [0, 1, 3, 4, 5],
+      "source": { "0": "proc-simple", "1": "proc", "3": "scan", "4": "scan", "5": "scan" },
+      "posByEra": { "default": [-37, -228] },
+      "material": { "3": "clean1888", "4": "weathered1929", "5": "raw2026" },
+      "grade": { "0": "C", "1": "C", "3": "A", "4": "A", "5": "A" }
+    },
+    {
+      "id": "dongwollang", "name": "근정문 동월랑",
+      "existsInEras": [0, 1, 3, 4, 5],
+      "source": { "0": "proc-simple", "1": "proc", "3": "scan", "4": "scan", "5": "scan" },
+      "posByEra": { "default": [37, -228] },
+      "material": { "3": "clean1888", "4": "weathered1929", "5": "raw2026" },
+      "grade": { "0": "C", "1": "C", "3": "A", "4": "A", "5": "A" }
+    },
+    {
+      "id": "seohaenggak", "name": "서행각 (마당 서회랑)",
+      "existsInEras": [0, 1, 3, 4, 5],
+      "source": { "0": "proc-simple", "1": "proc", "3": "scan", "4": "scan", "5": "scan" },
+      "posByEra": { "default": [-63, -294] },
+      "yawByEra": { "default": 90 },
+      "material": { "3": "clean1888", "4": "weathered1929", "5": "raw2026" },
+      "grade": { "0": "C", "1": "C", "3": "A", "4": "A", "5": "A" },
+      "sourceRef": { "3": "실측 스캔 길이 ≈140m (북궐도형 가정 132m 보다 김 — 실측 우선)" }
+    },
+    {
+      "id": "donghaenggak", "name": "동행각 (마당 동회랑)",
+      "existsInEras": [0, 1, 3, 4, 5],
+      "source": { "0": "proc-simple", "1": "proc", "3": "scan", "4": "scan", "5": "scan" },
+      "posByEra": { "default": [63, -294] },
+      "yawByEra": { "default": 90 },
+      "material": { "3": "clean1888", "4": "weathered1929", "5": "raw2026" },
+      "grade": { "0": "C", "1": "C", "3": "A", "4": "A", "5": "A" }
+    },
+    {
+      "id": "bukhoerang", "name": "북회랑 (마당 북측)",
+      "existsInEras": [0, 1, 3, 4, 5],
+      "source": { "0": "proc-simple", "1": "proc", "3": "proc", "4": "proc", "5": "proc" },
+      "posByEra": { "default": [0, -360] },
+      "grade": { "0": "C", "1": "C", "3": "B", "4": "B", "5": "A" },
+      "sourceRef": { "3": "스캔 미확보 — UE 에선 카메라 구도 회피 또는 KHS 행각 에셋 대체 (slice-handoff 노트)" }
+    },
+    {
+      "id": "geunjeongjeon", "name": "근정전",
+      "existsInEras": [0, 1, 3, 4, 5],
+      "source": { "0": "proc-simple", "1": "proc-simple", "3": "khs", "4": "khs", "5": "scan" },
+      "posByEra": { "default": [0, -318] },
+      "scaleByEra": { "0": 0.85, "1": 0.85 },
+      "material": { "3": "clean1888", "4": "weathered1929", "5": "raw2026" },
+      "grade": { "0": "C", "1": "C", "3": "A", "4": "A", "5": "A" },
+      "sourceRef": { "2": "연혁: 1592 소실", "3": "1867 중건 = 현존 원형 (북궐도형)", "4": "유리건판 (형태 동일, 표면 퇴색)" }
+    },
+    {
+      "id": "geunjeongjeon_woldae", "name": "근정전 월대 (2단 석조 기단)",
+      "existsInEras": [0, 1, 2, 3, 4, 5],
+      "source": { "0": "proc", "1": "proc", "2": "proc-ruin", "3": "khs", "4": "khs", "5": "scan" },
+      "posByEra": { "default": [0, -318] },
+      "grade": { "0": "C", "1": "C", "2": "C", "3": "A", "4": "A", "5": "A" },
+      "sourceRef": { "2": "석조 기단은 소실 후에도 잔존(연출 — 정확한 잔존 상태는 사료 부족 명시)" }
+    },
+    {
+      "id": "pumgyeseok", "name": "품계석 2열",
+      "existsInEras": [3, 4, 5],
+      "source": { "3": "sketchfab", "4": "sketchfab", "5": "sketchfab" },
+      "posByEra": { "default": [0, -262] },
+      "grade": { "3": "B", "4": "A", "5": "A" },
+      "sourceRef": { "3": "정조대 도입 → 고종대 존재 확실. 스케치팹 KHS_Asset glTF (다운로드 예정)" }
+    },
+    {
+      "id": "eodo", "name": "어도 (마당 구간)",
+      "existsInEras": [0, 1, 3, 4, 5],
+      "source": { "0": "proc", "1": "proc", "3": "proc", "4": "proc", "5": "proc" },
+      "posByEra": { "default": [0, -294] },
+      "grade": { "0": "C", "1": "C", "3": "B", "4": "B", "5": "A" }
+    },
+    {
+      "id": "sajeongmun", "name": "사정문",
+      "existsInEras": [3, 4, 5],
+      "source": { "3": "scan", "4": "scan", "5": "scan" },
+      "posByEra": { "default": [0, -362] },
+      "material": { "3": "clean1888", "4": "weathered1929", "5": "raw2026" },
+      "grade": { "3": "A", "4": "A", "5": "A" },
+      "sourceRef": { "0": "창건기 존재 여부 미확인 — 웹도 북회랑이 겸함(보수적으로 3~5만 등록)" }
+    },
+    {
+      "id": "sajeongjeon", "name": "사정전",
+      "existsInEras": [0, 1, 3, 4, 5],
+      "source": { "0": "proc-simple", "1": "proc", "3": "khs", "4": "khs", "5": "khs" },
+      "posByEra": { "default": [0, -432] },
+      "material": { "3": "clean1888", "4": "weathered1929", "5": "raw2026" },
+      "grade": { "0": "C", "1": "C", "3": "B", "4": "B", "5": "A" },
+      "sourceRef": { "3": "KHS 카탈로그에 클린 에셋 존재 — 이용신청 목록에 추가 권장 (forward-plan T0)" }
+    },
+    {
+      "id": "gangnyeongjeon", "name": "강녕전",
+      "existsInEras": [0, 1, 3, 5],
+      "source": { "0": "proc-simple", "1": "proc", "3": "scan", "5": "scan" },
+      "posByEra": { "default": [0, -495] },
+      "material": { "3": "clean1888", "5": "raw2026" },
+      "grade": { "0": "C", "1": "C", "3": "A", "5": "A" },
+      "sourceRef": { "4": "1917 창덕궁 희정당 재건 자재로 이건 — 1929 부재 (기록)", "5": "1995 복원" }
+    },
+    {
+      "id": "gyotaejeon", "name": "교태전",
+      "existsInEras": [1, 3, 5],
+      "source": { "1": "proc", "3": "proc", "5": "proc" },
+      "posByEra": { "default": [0, -540] },
+      "grade": { "1": "C", "3": "B", "5": "A" },
+      "sourceRef": { "1": "세종대 건립 기록", "4": "1917 창덕궁 대조전 재건 자재로 이건 — 부재", "5": "1995 복원" }
+    },
+    {
+      "id": "heumgyeonggak", "name": "흠경각 (자동 물시계 전각)",
+      "existsInEras": [1],
+      "source": { "1": "proc" },
+      "posByEra": { "default": [-26, -500] },
+      "grade": { "1": "C" },
+      "sourceRef": { "1": "실록: 세종대 장영실 흠경각 — 위치·형태 추정" }
+    },
+    {
+      "id": "jiphyeonjeon", "name": "집현전",
+      "existsInEras": [1],
+      "source": { "1": "proc-simple" },
+      "posByEra": { "default": [-98, -300] },
+      "grade": { "1": "C" },
+      "sourceRef": { "1": "실록: 궁 서측 — 위치 추정. 같은 자리 후신이 수정전(별도 등록)" }
+    },
+    {
+      "id": "sujeongjeon", "name": "수정전",
+      "existsInEras": [3, 4, 5],
+      "source": { "3": "proc", "4": "proc", "5": "proc" },
+      "posByEra": { "default": [-98, -300] },
+      "grade": { "3": "B", "4": "A", "5": "A" },
+      "sourceRef": { "3": "고종 중건 (집현전 옛터) — 북궐도형", "5": "현존" }
+    },
+    {
+      "id": "gyeonghoeru", "name": "경회루",
+      "existsInEras": [1, 3, 4, 5],
+      "source": { "1": "proc", "3": "scan", "4": "scan", "5": "scan" },
+      "posByEra": { "default": [-128, -352] },
+      "material": { "3": "clean1888", "4": "weathered1929", "5": "raw2026" },
+      "grade": { "1": "B", "3": "A", "4": "A", "5": "A" },
+      "sourceRef": { "0": "1412 태종 건립 — 태조대 부재", "2": "소실, 돌기둥 잔존 → remnant_gyeonghoeru" }
+    },
+    {
+      "id": "remnant_gyeonghoeru", "name": "경회루 돌기둥 (폐허 잔존)",
+      "existsInEras": [2],
+      "source": { "2": "proc-ruin" },
+      "posByEra": { "default": [-128, -352] },
+      "grade": { "2": "B" },
+      "sourceRef": { "2": "석주 잔존은 기록·상식적 — 세부 상태는 연출" }
+    },
+    {
+      "id": "gyeonghoeru_pond", "name": "경회루 연못",
+      "existsInEras": [1, 2, 3, 4, 5],
+      "source": { "1": "proc", "2": "proc", "3": "proc", "4": "proc", "5": "proc" },
+      "posByEra": { "default": [-128, -350] },
+      "grade": { "1": "B", "2": "B", "3": "A", "4": "A", "5": "A" }
+    },
+    {
+      "id": "chongdokbu", "name": "조선총독부 청사",
+      "existsInEras": [4],
+      "source": { "4": "proc" },
+      "posByEra": { "default": [0, -128] },
+      "grade": { "4": "B" },
+      "sourceRef": { "4": "1926 완공, 흥례문 자리 — 근정전 축을 가로막는 배치가 핵심 상징. 1995 철거. 유리건판·사진 다수" }
+    },
+    {
+      "id": "expo_banners", "name": "1929 박람회 가설물 (배너 열)",
+      "existsInEras": [4],
+      "source": { "4": "proc" },
+      "posByEra": { "default": [0, -280] },
+      "grade": { "4": "B" },
+      "sourceRef": { "4": "1929 조선박람회 — 유리건판·박람회 사진 37장" }
+    },
+    {
+      "id": "remnant_foundations", "name": "폐허 초석군 (흥례문·강녕전·교태전·집현전 터)",
+      "existsInEras": [2],
+      "source": { "2": "proc-ruin" },
+      "posByEra": { "default": [0, -300] },
+      "grade": { "2": "C" },
+      "sourceRef": { "2": "소실은 확실(연혁), 초석 배치는 연출 — 웹 4개 터 [0,-135],[0,-495],[0,-540],[-98,-300]" }
+    },
+    {
+      "id": "ruin_dressing", "name": "폐허 세트드레싱 (잡초·수목)",
+      "existsInEras": [2, 5],
+      "source": { "2": "proc", "5": "proc" },
+      "posByEra": { "default": [0, -280] },
+      "grade": { "2": "C", "5": "C" },
+      "sourceRef": { "2": "273년 방치 연출. 5(현재)는 조경수" }
+    },
+    {
+      "id": "gungjang", "name": "궁장 (외곽 담장)",
+      "existsInEras": [0, 1, 2, 3, 4, 5],
+      "source": { "0": "proc", "1": "proc", "2": "proc", "3": "proc", "4": "proc", "5": "proc" },
+      "posByEra": { "default": [0, -281] },
+      "grade": { "0": "C", "1": "C", "2": "C", "3": "B", "4": "B", "5": "A" },
+      "sourceRef": { "2": "폐허기 담장 잔존 정도는 추정", "3": "북궐도형 외곽선" }
+    }
+  ]
+}
