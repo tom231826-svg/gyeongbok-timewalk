@@ -203,30 +203,28 @@ def main():
         print("[Gyeongbok/s4] unreal 모듈 없음 — UE 에디터/헤드리스에서 실행하세요.")
         return
 
-    buildings = load_buildings(LAYOUT_JSON)
-    g = compute_geometry(buildings)
-    log("hero(근정전 추정)='%s'  south_edge_x=%.0f  axis_y=%.0f  depth=%.0fm"
-        % (g["hero"]["name"], g["south_edge_x"], g["axis_y"], g["depth"] / M))
-
+    # 근정전 부재(승인 대기) 기준 구도 — 마당·회랑·사정문·배경 산세가 주인공.
+    # 좌표는 layout 고정값: 마당 중심 UE(29400,0), 사정문 (36200,0), 행각 (29400,±6300).
     subsystem = get_actor_subsystem()
     delete_actors_by_labels(subsystem, CAM_LABELS)
 
-    # ① 남서 모서리, 로우앵글, 근정전 방향
-    pos1 = unreal.Vector(g["south_edge_x"] + 5 * M, g["west_edge_y"], 2.0 * M)
-    tgt1 = unreal.Vector(g["hero_x"], g["hero_y"], 8.0 * M)
-    spawn_camera(subsystem, "Cam_SW_LowAngle", pos1, tgt1, focal_mm=24.0, aperture=8.0)
+    # ① 동행각 로우앵글 — 노을(서쪽 광원)을 정면으로 받는 회랑의 원근
+    pos1 = unreal.Vector(23500.0, -1500.0, 1.7 * M)
+    tgt1 = unreal.Vector(32000.0, 6300.0, 6.0 * M)
+    spawn_camera(subsystem, "Cam_SW_LowAngle", pos1, tgt1, focal_mm=32.0, aperture=5.6)
 
-    # ② 어도 정면, 아이레벨, 근정전 정면
-    pos2 = unreal.Vector(g["south_edge_x"] + 10 * M, g["axis_y"], 1.6 * M)
-    tgt2 = unreal.Vector(g["hero_south_face_x"], g["axis_y"], 6.0 * M)
-    spawn_camera(subsystem, "Cam_Eodo_Eye", pos2, tgt2, focal_mm=35.0, aperture=8.0)
+    # ② 어도 축선 아이레벨 — 어도를 따라 북쪽 사정문(+배경 북악산)으로
+    pos2 = unreal.Vector(22900.0, 0.0, 1.6 * M)
+    tgt2 = unreal.Vector(36200.0, 0.0, 5.0 * M)
+    spawn_camera(subsystem, "Cam_Eodo_Eye", pos2, tgt2, focal_mm=40.0, aperture=8.0)
 
-    # ③ 월대(근정전 앞 기단) 위에서 마당 부감
-    pos3 = unreal.Vector(g["hero_south_face_x"] - 8 * M, g["axis_y"], 4.0 * M)
-    tgt3 = unreal.Vector(g["south_edge_x"] + g["depth"] * 0.45, g["axis_y"], 0.0)
-    spawn_camera(subsystem, "Cam_Woldae_High", pos3, tgt3, focal_mm=28.0, aperture=8.0)
+    # ③ 남서 상공 부감 — 박석 마당 전체 + 회랑 사각 + 경회루·산세
+    pos3 = unreal.Vector(24000.0, -7500.0, 18.0 * M)
+    tgt3 = unreal.Vector(30000.0, 500.0, 0.0)
+    spawn_camera(subsystem, "Cam_Woldae_High", pos3, tgt3, focal_mm=24.0, aperture=8.0)
 
-    log("카메라 3대 배치 완료. 촬영은 수동(상단 주석: Pilot + HighResShot 3840x2160).")
+    log("카메라 3대 배치 완료(마당 기준 구도). 근정전 도착 후엔 구도 재조준 예정.")
+    log("촬영: 카메라 선택 → 뷰포트 우클릭 'xx로 파일럿' → 콘솔(Cmd모드) HighResShot 3840x2160")
 
 
 if __name__ == "__main__":
