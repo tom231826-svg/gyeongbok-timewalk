@@ -5,10 +5,11 @@
 #
 # s5_era_materials.py  —  "시대 전환" 드라이런
 #   s1/s2 로 임포트·배치된 실측 스캔 메시의 표면 텍스처를 시대별 파생본으로 교체한다.
-#   2026=원본(낡음) / 1888=선명(갓 칠한 단청) / 1929=퇴색.  텍스처는 웹 작업 때 이미 만들어 둔 것 재사용.
-#     원본  : ~/projects/gyeongbok-timewalk/prototype/assets/scans_csp/<file>.jpg
-#     1888  : .../scans_csp/era1888/<file>.jpg
+#   2026=FBX 임포트 원본 머티리얼 복원(8K, 낡음) / 1888=선명(갓 칠한 단청) / 1929=퇴색.
+#   1888/1929 텍스처는 웹 작업 때 이미 만들어 둔 것 재사용:
+#     1888  : ~/projects/gyeongbok-timewalk/prototype/assets/scans_csp/era1888/<file>.jpg
 #     1929  : .../scans_csp/era1929/<file>.jpg
+#   (2026 은 파일 임포트 없음 — 스캔 폴더의 원본 머티리얼로 되돌림. 원본을 못 찾을 때만 웹 2K 로 폴백)
 #
 #   방식: 파라미터화된 마스터 머티리얼 M_EraScan(Base 텍스처 파라미터) 1개를 만들고,
 #         건물·시대별 MaterialInstanceConstant 를 만들어 메시 슬롯에 배정.
@@ -130,7 +131,7 @@ def ensure_instance(master, bldg, era, key, tex):
     return mic
 
 
-# ─────────────────────────── 메시 검색 ───────────────────────────
+# ─────────────────────────── 메시·원본 머티리얼 검색 ───────────────────────────
 def find_static_mesh(folder):
     if not unreal.EditorAssetLibrary.does_directory_exist(folder):
         return None
@@ -141,12 +142,36 @@ def find_static_mesh(folder):
     return None
 
 
-def assign_to_mesh(mesh, slot_key, mic):
-    """머티리얼 슬롯 이름에 slot_key 가 포함된 슬롯에 mic 배정. 매칭 슬롯 수 반환."""
+def find_original_material(folder, key):
+    """스캔 폴더 안의 FBX 임포트 원본 머티리얼(이름에 key 포함). 우리가 만든 MI_/M_Era 는 제외.
+    key 매칭 실패 시 폴더의 아무 원본 머티리얼(단일 재질 건물용)로 폴백."""
+    if not unreal.EditorAssetLibrary.does_directory_exist(folder):
+        return None
+    fallback = None
+    for a in unreal.EditorAssetLibrary.list_assets(folder, recursive=True, include_folder=False):
+        obj = unreal.EditorAssetLibrary.load_asset(a)
+        if not isinstance(obj, unreal.MaterialInterface):
+            continue
+        nm = obj.get_name()
+        if nm.startswith("MI_") or nm.startswith("M_Era"):
+            continue
+        if key in nm:
+            return obj
+        if fallback is None:
+            fallback = obj
+    return fallback
+
+
+def assign_to_mesh(mesh, slot_key, mic, claimed):
+    """머티리얼 슬롯 이름에 slot_key 가 포함된 슬롯에 mic 배정. 매칭 슬롯 수 반환.
+    claimed: 이번 시대 적용에서 이미 배정된 슬롯 인덱스 집합 — 키 이름이 겹칠 때
+    (예: 'GJM_E_HG' ⊂ 'GJM_E_HG_in1') 먼저 배정된 슬롯을 덮어쓰지 않게 함."""
     n = 0
     try:
         slots = mesh.get_editor_property("static_materials")
         for i, sm in enumerate(slots):
+            if i in claimed:
+                continue
             sname = str(sm.material_slot_name)
             iname = ""
             try:
@@ -158,12 +183,14 @@ def assign_to_mesh(mesh, slot_key, mic):
                     mesh.set_material(i, mic)   # UE5 StaticMesh.set_material(index, material)
                 except Exception:
                     sm.material_interface = mic
+                claimed.add(i)
                 n += 1
-        if n == 0 and len(slots) == 1:          # 슬롯 이름 매칭 실패 + 슬롯 1개면 그냥 배정
+        if n == 0 and len(slots) == 1 and 0 not in claimed:   # 슬롯 이름 매칭 실패 + 슬롯 1개면 그냥 배정
             try:
                 mesh.set_material(0, mic)
             except Exception:
                 slots[0].material_interface = mic
+            claimed.add(0)
             n = 1
         unreal.EditorAssetLibrary.save_loaded_asset(mesh)
     except Exception as e:
@@ -188,12 +215,21 @@ def set_era(era):
         mesh = find_static_mesh(folder)
         if mesh is None:
             continue   # 이 빌드/드라이런에 임포트 안 된 건물은 조용히 스킵
-        for key, fname in keymap.items():
+        claimed = set()
+        # 키 이름이 겹칠 수 있어 긴 키부터 배정 (예: GJM_E_HG_in1 → GJM_E_HG 순)
+        for key in sorted(keymap, key=len, reverse=True):
+            fname = keymap[key]
+            if era == "2026":
+                orig = find_original_material(folder, key)
+                if orig is not None:
+                    applied += assign_to_mesh(mesh, key, orig, claimed)
+                    continue
+                log_warn("'%s' 원본 머티리얼 못 찾음 → 웹 2K 텍스처로 폴백" % bldg)
             tex = import_texture(era, fname)
             if tex is None:
                 continue
             mic = ensure_instance(master, bldg, era, key, tex)
-            applied += assign_to_mesh(mesh, key, mic)
+            applied += assign_to_mesh(mesh, key, mic, claimed)
     log("시대 %s 적용 완료 — 머티리얼 슬롯 %d 개 교체" % (era, applied))
     log("다른 시대로 바꾸려면 콘솔에서:  set_era(1929)   set_era(2026)   set_era(1888)")
 
