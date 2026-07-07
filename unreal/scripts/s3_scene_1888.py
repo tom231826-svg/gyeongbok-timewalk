@@ -89,18 +89,20 @@ def set_movable(actor):
 
 
 def clean_template_scene(subsystem):
-    """템플릿 맵에 딸려온 조명·하늘·안개는 삭제(태양 중복 방지), Landscape 는 숨긴다."""
+    """템플릿 맵에 딸려온 조명·하늘·안개·사막 랜드스케이프를 삭제한다.
+    (숨김은 '임시' 플래그라 저장/재로드 때 풀림 — 07-07 확인 → 영구 삭제로 변경)"""
     doomed_classes = tuple(
         c for c in (
             getattr(unreal, "DirectionalLight", None),
             getattr(unreal, "SkyLight", None),
             getattr(unreal, "SkyAtmosphere", None),
             getattr(unreal, "ExponentialHeightFog", None),
+            getattr(unreal, "LandscapeProxy", None),        # 사막 지형 본체
+            getattr(unreal, "WorldPartitionHLOD", None),    # 지형 원경 대역(HLOD)
         ) if c is not None
     )
-    landscape_cls = getattr(unreal, "LandscapeProxy", None)
     label_set = set(SCENE_LABELS)
-    removed, hidden = 0, 0
+    removed = 0
     for a in subsystem.get_all_level_actors():
         try:
             if a.get_actor_label() in label_set:
@@ -108,13 +110,9 @@ def clean_template_scene(subsystem):
             if isinstance(a, doomed_classes):
                 subsystem.destroy_actor(a)
                 removed += 1
-            elif landscape_cls and isinstance(a, landscape_cls):
-                a.set_is_temporarily_hidden_in_editor(True)
-                a.set_actor_hidden_in_game(True)
-                hidden += 1
         except Exception as e:
             log_warn("템플릿 정리 예외: %s" % e)
-    log("템플릿 정리: 기본 조명·하늘 %d 개 삭제, 랜드스케이프 %d 개 숨김" % (removed, hidden))
+    log("템플릿 정리: 기본 조명·하늘·랜드스케이프 %d 개 영구 삭제" % removed)
 
 
 # ---------------------------------------------------------------------------
