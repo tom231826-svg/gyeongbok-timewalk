@@ -7,7 +7,9 @@
 # s3_scene_1888.py
 #   1888년 늦은 오후(노을) 분위기 셋업: DirectionalLight(서쪽 저녁 태양), SkyAtmosphere,
 #   SkyLight(리얼타임 캡처), ExponentialHeightFog(옅은 주황 헤이즈), PostProcessVolume(무한),
-#   그리고 임시 바닥 Plane(400m×400m).
+#   그리고 임시 바닥 Plane(600m×600m, 마당 중심).
+#   템플릿 맵 정리: 맵에 딸려온 기본 태양·하늘·안개는 삭제(태양 2개 방지),
+#   사막 Landscape 는 숨김(삭제 아님 — 되돌리기 가능).
 #   재실행 안전: 아래 SCENE_LABELS 라벨의 기존 액터를 삭제 후 재생성.
 #
 # ── 파이썬으로 자동화 못 하는 것(수동 체크리스트) ────────────────────────────────
@@ -84,6 +86,35 @@ def set_movable(actor):
         actor.root_component.set_mobility(unreal.ComponentMobility.MOVABLE)
     except Exception as e:
         log_warn("mobility=Movable 설정 스킵: %s" % e)
+
+
+def clean_template_scene(subsystem):
+    """템플릿 맵에 딸려온 조명·하늘·안개는 삭제(태양 중복 방지), Landscape 는 숨긴다."""
+    doomed_classes = tuple(
+        c for c in (
+            getattr(unreal, "DirectionalLight", None),
+            getattr(unreal, "SkyLight", None),
+            getattr(unreal, "SkyAtmosphere", None),
+            getattr(unreal, "ExponentialHeightFog", None),
+        ) if c is not None
+    )
+    landscape_cls = getattr(unreal, "LandscapeProxy", None)
+    label_set = set(SCENE_LABELS)
+    removed, hidden = 0, 0
+    for a in subsystem.get_all_level_actors():
+        try:
+            if a.get_actor_label() in label_set:
+                continue
+            if isinstance(a, doomed_classes):
+                subsystem.destroy_actor(a)
+                removed += 1
+            elif landscape_cls and isinstance(a, landscape_cls):
+                a.set_is_temporarily_hidden_in_editor(True)
+                a.set_actor_hidden_in_game(True)
+                hidden += 1
+        except Exception as e:
+            log_warn("템플릿 정리 예외: %s" % e)
+    log("템플릿 정리: 기본 조명·하늘 %d 개 삭제, 랜드스케이프 %d 개 숨김" % (removed, hidden))
 
 
 # ---------------------------------------------------------------------------
@@ -198,10 +229,11 @@ def spawn_ground(subsystem):
     if plane is None:
         log_warn("기본 Plane 메시를 못 찾음 — 바닥 생략")
         return None
-    floor = subsystem.spawn_actor_from_object(plane, unreal.Vector(0, 0, 0))
+    # 마당 중심: layout courtyard center (0,-294)m → UE (29400, 0) cm. Z=-2cm(건물 바닥과 z-파이팅 방지)
+    floor = subsystem.spawn_actor_from_object(plane, unreal.Vector(29400.0, 0.0, -2.0))
     floor.set_actor_label("Ground_Temp")
-    # 기본 Plane = 1m x 1m -> 400m x 400m
-    floor.set_actor_scale3d(unreal.Vector(400.0, 400.0, 1.0))
+    # 기본 Plane = 1m x 1m -> 600m x 600m (마당+주변, 긴 노을 그림자 수용)
+    floor.set_actor_scale3d(unreal.Vector(600.0, 600.0, 1.0))
     try:
         comp = floor.static_mesh_component
         mat = unreal.EditorAssetLibrary.load_asset("/Engine/BasicShapes/BasicShapeMaterial")
@@ -220,6 +252,7 @@ def main():
 
     subsystem = get_actor_subsystem()
     delete_actors_by_labels(subsystem, SCENE_LABELS)
+    clean_template_scene(subsystem)
 
     spawn_ground(subsystem)
     spawn_sky_atmosphere(subsystem)
