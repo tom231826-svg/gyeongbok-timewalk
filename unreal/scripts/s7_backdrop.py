@@ -145,7 +145,14 @@ def main():
         actor = subsystem.spawn_actor_from_object(mesh, unreal.Vector(px, py, pz))
         actor.set_actor_label(label)
         actor.set_actor_scale3d(unreal.Vector(100.0, 100.0, 100.0))  # 스캔 1:100 → 균일 ×100
-        log("%s 배치 (북변 회랑 대체)" % label)
+        try:
+            # 스캔 기준점이 제멋대로라 바운즈 최저점을 Z=0 에 붙인다 (s2 와 동일 처리)
+            origin, extent = actor.get_actor_bounds(False)
+            min_z = origin.z - extent.z
+            actor.add_actor_world_offset(unreal.Vector(0.0, 0.0, -min_z), False, False)
+        except Exception as e:
+            log_warn("%s 바닥 붙이기 실패: %s" % (label, e))
+        log("%s 배치 (북변 회랑 대체, 바닥 정렬)" % label)
 
     log("배경 완료 — 노을 안개 속 산세 + 닫힌 마당. 레벨 저장(Cmd+S).")
 
