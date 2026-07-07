@@ -228,6 +228,14 @@ def spawn_post_process(subsystem):
 
 
 def spawn_ground(subsystem):
+    # s6(박석 바닥)가 이미 깔렸으면 임시 바닥은 만들지 않는다 (z-파이팅 방지)
+    for a in subsystem.get_all_level_actors():
+        try:
+            if a.get_actor_label() == "Ground_Masato":
+                log("s6 바닥 감지 — 임시 바닥(Ground_Temp) 생성 스킵")
+                return None
+        except Exception:
+            continue
     plane = unreal.EditorAssetLibrary.load_asset("/Engine/BasicShapes/Plane")
     if plane is None:
         log_warn("기본 Plane 메시를 못 찾음 — 바닥 생략")
