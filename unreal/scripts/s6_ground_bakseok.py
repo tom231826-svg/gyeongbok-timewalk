@@ -2,14 +2,15 @@
 # 실행법 (에디터 콘솔 Python 모드):
 #   exec(open('/Users/junkim/projects/gyeongbok-timewalk/unreal/scripts/s6_ground_bakseok.py').read())
 #
-# s6_ground_bakseok.py — G1: 박석 마당 바닥
-#   make_ground_textures.py 로 생성한 박석/어도/마사토 텍스처를 임포트하고,
-#   월드좌표 기반 UV 마스터 머티리얼 1개 + 인스턴스 3개를 만들어 바닥 3장을 깐다:
-#     · Ground_Bakseok — 마당(회랑 안쪽 126×132m), 박석
-#     · Ground_Eodo    — 어도(임금 길, 폭 7m), 살짝 돋움
-#     · Ground_Masato  — 바깥 흙바닥 600×600m (기존 Ground_Temp 대체)
-#   월드좌표 UV 라 평면 크기와 무관하게 무늬 크기가 일정하고 이음매가 없다.
-#   재실행 안전: 바닥 액터는 지우고 다시 깔고, 텍스처·머티리얼은 재사용.
+# s6_ground_bakseok.py (v2) — G1: 실제 근정전 권역 바닥 구성
+#   실제 구성 재현(화질보다 구성 우선):
+#     · 박석 마당 — 회랑 안쪽 전면(126×132m) + 근정문 남쪽 전정(영제교까지 52m)
+#     · 삼도(三道) — 중앙 어도(폭4.6m, +8cm) + 좌우 신하길(폭2.6m, +4cm), 남북 관통
+#     · 품계석 2열×12 — 어도 양옆(임시 돌기둥 프록시, 스케치팹 도착 시 교체)
+#     · 마사토 — 회랑 바깥 600×600m
+#   v1 실패 교훈: 월드좌표 UV 등 복잡한 머티리얼 그래프 API가 버전차로 깨짐
+#   → v2 는 검증된 노드만 사용(TexCoord 타일링 + TextureSample). 평면마다 전용 머티리얼.
+#   재실행 안전: 라벨 삭제 후 재생성, 텍스처·머티리얼 재사용.
 
 import os
 
@@ -21,22 +22,29 @@ except ImportError:
 
 TEX_DIR = "/Users/junkim/projects/gyeongbok-timewalk/unreal/textures"
 GROUND_ROOT = "/Game/Gyeongbok/Ground"
-MASTER_PATH = GROUND_ROOT + "/M_GroundWS"
 
-# (이름, 디퓨즈, 노멀, 타일 실물크기 cm, 매크로 얼룩 강도, 러프니스)
-SURFACES = {
-    "Bakseok": ("bakseok_D.jpg", "bakseok_N.png", 600.0, 0.35, 0.85),
-    "Eodo":    ("eodo_D.jpg",    "eodo_N.png",    400.0, 0.25, 0.75),
-    "Masato":  ("masato_D.jpg",  "masato_N.png",  900.0, 0.40, 0.95),
+# 표면: (디퓨즈, 노멀, 타일 실물 m)
+SURF = {
+    "bakseok": ("bakseok_D.jpg", "bakseok_N.png", 6.0),
+    "eodo":    ("eodo_D.jpg",    "eodo_N.png",    4.0),
+    "masato":  ("masato_D.jpg",  "masato_N.png",  9.0),
 }
 
-# 바닥 액터: (라벨, 표면, UE위치 cm, 스케일 m) — layout 좌표계: UE.X=-z*100, UE.Y=x*100
+# 바닥 평면: (라벨, 표면, UE위치 cm, 크기 m(x북남,y동서))
 PLANES = [
-    ("Ground_Bakseok", "Bakseok", (29400.0, 0.0, 0.0), (132.0, 126.0)),
-    ("Ground_Eodo",    "Eodo",    (29400.0, 0.0, 4.0), (128.0, 7.0)),
-    ("Ground_Masato",  "Masato",  (29400.0, 0.0, -2.0), (600.0, 600.0)),
+    ("Ground_Bakseok_Main",  "bakseok", (29400.0, 0.0, 0.0),  (132.0, 126.0)),
+    ("Ground_Bakseok_South", "bakseok", (20200.0, 0.0, 0.0),  (52.0, 126.0)),
+    ("Samdo_Center",         "eodo",    (28400.0, 0.0, 8.0),  (152.0, 4.6)),
+    ("Samdo_E",              "eodo",    (28400.0, 360.0, 4.0), (152.0, 2.6)),
+    ("Samdo_W",              "eodo",    (28400.0, -360.0, 4.0), (152.0, 2.6)),
+    ("Ground_Masato",        "masato",  (29400.0, 0.0, -2.0), (600.0, 600.0)),
 ]
-OLD_LABELS = ["Ground_Temp"]   # s3 임시 바닥 — 발견 시 제거
+
+# 품계석 프록시: 어도 양옆 2열×12 (실물 위치 근사 — 마당 남반부)
+PUM_Y = 550.0            # 어도에서 5.5m
+PUM_X0, PUM_STEP, PUM_N = 25000.0, 500.0, 12
+
+OLD_LABELS = ["Ground_Temp", "Ground_Bakseok", "Ground_Eodo"]   # v1·s3 잔재
 
 
 def log(msg):
@@ -50,7 +58,7 @@ def log_warn(msg):
 def import_tex(fname, is_normal):
     src = os.path.join(TEX_DIR, fname)
     if not os.path.isfile(src):
-        log_warn("텍스처 파일 없음: %s (make_ground_textures.py 먼저 실행)" % src)
+        log_warn("텍스처 파일 없음: %s" % src)
         return None
     name = os.path.splitext(fname)[0]
     dest = "%s/%s" % (GROUND_ROOT, name)
@@ -69,119 +77,83 @@ def import_tex(fname, is_normal):
             tex.set_editor_property("compression_settings",
                                     unreal.TextureCompressionSettings.TC_NORMALMAP)
             tex.set_editor_property("srgb", False)
-            # 노멀은 OpenGL(초록=위) 방식으로 생성됨 — 요철이 반대로 보이면 아래를 True 로
-            tex.set_editor_property("flip_green_channel", False)
             unreal.EditorAssetLibrary.save_asset(dest)
         except Exception as e:
-            log_warn("노멀 텍스처 설정 스킵(%s): %s" % (name, e))
+            log_warn("노멀 설정 스킵(%s): %s" % (name, e))
     return tex
 
 
-def ensure_master():
-    """월드좌표 UV 마스터: BaseTex·NormalTex·TileSize·MacroStrength·Roughness 파라미터."""
-    m = unreal.EditorAssetLibrary.load_asset(MASTER_PATH)
+def ensure_plane_material(label, surf_key, size_m):
+    """평면 전용 머티리얼: TexCoord 타일링 → 텍스처. 검증된 노드만 사용."""
+    d_file, n_file, tile_m = SURF[surf_key]
+    path = "%s/M_%s" % (GROUND_ROOT, label)
+    m = unreal.EditorAssetLibrary.load_asset(path)
     if m:
         return m
     at = unreal.AssetToolsHelpers.get_asset_tools()
-    m = at.create_asset("M_GroundWS", GROUND_ROOT, unreal.Material, unreal.MaterialFactoryNew())
+    m = at.create_asset("M_%s" % label, GROUND_ROOT, unreal.Material,
+                        unreal.MaterialFactoryNew())
     mel = unreal.MaterialEditingLibrary
 
-    wp = mel.create_material_expression(m, unreal.MaterialExpressionWorldPosition, -1200, 0)
-    mask = mel.create_material_expression(m, unreal.MaterialExpressionComponentMask, -1000, 0)
-    mask.set_editor_property("r", True)
-    mask.set_editor_property("g", True)
-    mask.set_editor_property("b", False)
-    mask.set_editor_property("a", False)
-    tsize = mel.create_material_expression(m, unreal.MaterialExpressionScalarParameter, -1000, 200)
-    tsize.set_editor_property("parameter_name", "TileSize")
-    tsize.set_editor_property("default_value", 600.0)
-    div = mel.create_material_expression(m, unreal.MaterialExpressionDivide, -800, 0)
-
-    base = mel.create_material_expression(m, unreal.MaterialExpressionTextureSampleParameter2D, -600, -150)
-    base.set_editor_property("parameter_name", "BaseTex")
-    norm = mel.create_material_expression(m, unreal.MaterialExpressionTextureSampleParameter2D, -600, 450)
-    norm.set_editor_property("parameter_name", "NormalTex")
+    uv = mel.create_material_expression(m, unreal.MaterialExpressionTextureCoordinate, -500, 0)
     try:
-        norm.set_editor_property("sampler_type", unreal.MaterialSamplerType.SAMPLERTYPE_NORMAL)
+        uv.set_editor_property("u_tiling", size_m[0] / tile_m)
+        uv.set_editor_property("v_tiling", size_m[1] / tile_m)
     except Exception as e:
-        log_warn("노멀 샘플러 타입 스킵: %s" % e)
+        log_warn("%s 타일링 스킵: %s" % (label, e))
 
-    # 매크로 얼룩: 같은 텍스처를 넓게(x0.07) 한 번 더 샘플 → 무채색 → 밝기 변조
-    mscale = mel.create_material_expression(m, unreal.MaterialExpressionConstant, -800, 200)
-    mscale.set_editor_property("r", 0.07)
-    mdiv = mel.create_material_expression(m, unreal.MaterialExpressionMultiply, -700, 150)
-    msamp = mel.create_material_expression(m, unreal.MaterialExpressionTextureSampleParameter2D, -600, 150)
-    msamp.set_editor_property("parameter_name", "BaseTex")   # 같은 파라미터 공유
-    mdesat = mel.create_material_expression(m, unreal.MaterialExpressionDesaturation, -400, 150)
-    dfrac = mel.create_material_expression(m, unreal.MaterialExpressionConstant, -500, 300)
-    dfrac.set_editor_property("r", 1.0)
-    mstr = mel.create_material_expression(m, unreal.MaterialExpressionScalarParameter, -400, 300)
-    mstr.set_editor_property("parameter_name", "MacroStrength")
-    mstr.set_editor_property("default_value", 0.35)
-    mul1 = mel.create_material_expression(m, unreal.MaterialExpressionMultiply, -250, 150)
-    two = mel.create_material_expression(m, unreal.MaterialExpressionConstant, -400, 420)
-    two.set_editor_property("r", 2.0)
-    mul2 = mel.create_material_expression(m, unreal.MaterialExpressionMultiply, -150, 200)
-    onem = mel.create_material_expression(m, unreal.MaterialExpressionOneMinus, -250, 300)
-    add1 = mel.create_material_expression(m, unreal.MaterialExpressionAdd, -50, 150)
-    final = mel.create_material_expression(m, unreal.MaterialExpressionMultiply, 50, -50)
+    d_tex = import_tex(d_file, is_normal=False)
+    base = mel.create_material_expression(m, unreal.MaterialExpressionTextureSample, -250, -100)
+    if d_tex:
+        try:
+            base.set_editor_property("texture", d_tex)
+        except Exception as e:
+            log_warn("%s 디퓨즈 지정 실패: %s" % (label, e))
+    mel.connect_material_expressions(uv, "", base, "UVs")
+    mel.connect_material_property(base, "RGB", unreal.MaterialProperty.MP_BASE_COLOR)
 
-    rough = mel.create_material_expression(m, unreal.MaterialExpressionScalarParameter, -150, 500)
-    rough.set_editor_property("parameter_name", "Roughness")
-    rough.set_editor_property("default_value", 0.85)
-
-    mel.connect_material_expressions(wp, "", mask, "")
-    mel.connect_material_expressions(mask, "", div, "A")
-    mel.connect_material_expressions(tsize, "", div, "B")
-    mel.connect_material_expressions(div, "", base, "UVs")
-    mel.connect_material_expressions(div, "", norm, "UVs")
-    mel.connect_material_expressions(div, "", mdiv, "A")
-    mel.connect_material_expressions(mscale, "", mdiv, "B")
-    mel.connect_material_expressions(mdiv, "", msamp, "UVs")
-    mel.connect_material_expressions(msamp, "RGB", mdesat, "")
-    mel.connect_material_expressions(dfrac, "", mdesat, "Fraction")
-    mel.connect_material_expressions(mdesat, "", mul1, "A")
-    mel.connect_material_expressions(mstr, "", mul1, "B")
-    mel.connect_material_expressions(mul1, "", mul2, "A")
-    mel.connect_material_expressions(two, "", mul2, "B")
-    mel.connect_material_expressions(mstr, "", onem, "")
-    mel.connect_material_expressions(mul2, "", add1, "A")
-    mel.connect_material_expressions(onem, "", add1, "B")
-    mel.connect_material_expressions(base, "RGB", final, "A")
-    mel.connect_material_expressions(add1, "", final, "B")
-
-    mel.connect_material_property(final, "", unreal.MaterialProperty.MP_BASE_COLOR)
+    rough = mel.create_material_expression(m, unreal.MaterialExpressionConstant, -250, 150)
+    rough.set_editor_property("r", 0.9)
     mel.connect_material_property(rough, "", unreal.MaterialProperty.MP_ROUGHNESS)
-    mel.connect_material_property(norm, "", unreal.MaterialProperty.MP_NORMAL)
+
+    n_tex = import_tex(n_file, is_normal=True)
+    if n_tex:
+        norm = mel.create_material_expression(m, unreal.MaterialExpressionTextureSample, -250, 300)
+        try:
+            norm.set_editor_property("texture", n_tex)
+            norm.set_editor_property("sampler_type", unreal.MaterialSamplerType.SAMPLERTYPE_NORMAL)
+            mel.connect_material_expressions(uv, "", norm, "UVs")
+            mel.connect_material_property(norm, "", unreal.MaterialProperty.MP_NORMAL)
+        except Exception as e:
+            log_warn("%s 노멀 연결 스킵(디퓨즈만 사용): %s" % (label, e))
 
     mel.recompile_material(m)
-    unreal.EditorAssetLibrary.save_asset(MASTER_PATH)
-    log("M_GroundWS 마스터 머티리얼 생성")
+    unreal.EditorAssetLibrary.save_asset(path)
+    log("M_%s 생성" % label)
     return m
 
 
-def ensure_instance(master, key):
-    d_file, n_file, tile, macro, roughv = SURFACES[key]
-    path = "%s/MI_Ground_%s" % (GROUND_ROOT, key)
-    mic = unreal.EditorAssetLibrary.load_asset(path)
-    if mic is None:
-        at = unreal.AssetToolsHelpers.get_asset_tools()
-        mic = at.create_asset("MI_Ground_%s" % key, GROUND_ROOT,
-                              unreal.MaterialInstanceConstant,
-                              unreal.MaterialInstanceConstantFactoryNew())
-        unreal.MaterialEditingLibrary.set_material_instance_parent(mic, master)
+def ensure_stone_material():
+    path = "%s/M_StoneProxy" % GROUND_ROOT
+    m = unreal.EditorAssetLibrary.load_asset(path)
+    if m:
+        return m
+    at = unreal.AssetToolsHelpers.get_asset_tools()
+    m = at.create_asset("M_StoneProxy", GROUND_ROOT, unreal.Material,
+                        unreal.MaterialFactoryNew())
     mel = unreal.MaterialEditingLibrary
-    d_tex = import_tex(d_file, is_normal=False)
-    n_tex = import_tex(n_file, is_normal=True)
-    if d_tex:
-        mel.set_material_instance_texture_parameter_value(mic, "BaseTex", d_tex)
-    if n_tex:
-        mel.set_material_instance_texture_parameter_value(mic, "NormalTex", n_tex)
-    mel.set_material_instance_scalar_parameter_value(mic, "TileSize", tile)
-    mel.set_material_instance_scalar_parameter_value(mic, "MacroStrength", macro)
-    mel.set_material_instance_scalar_parameter_value(mic, "Roughness", roughv)
+    col = mel.create_material_expression(m, unreal.MaterialExpressionConstant3Vector, -300, 0)
+    try:
+        col.set_editor_property("constant", unreal.LinearColor(0.32, 0.31, 0.29, 1.0))
+    except Exception as e:
+        log_warn("품계석 색 스킵: %s" % e)
+    rough = mel.create_material_expression(m, unreal.MaterialExpressionConstant, -300, 200)
+    rough.set_editor_property("r", 0.85)
+    mel.connect_material_property(col, "", unreal.MaterialProperty.MP_BASE_COLOR)
+    mel.connect_material_property(rough, "", unreal.MaterialProperty.MP_ROUGHNESS)
+    mel.recompile_material(m)
     unreal.EditorAssetLibrary.save_asset(path)
-    return mic
+    return m
 
 
 def main():
@@ -190,8 +162,8 @@ def main():
         return
     subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 
-    # 기존 바닥(우리 것 + s3 임시) 제거
     doomed = set(OLD_LABELS + [p[0] for p in PLANES])
+    doomed |= {"Pum_%s_%02d" % (s, i) for s in ("E", "W") for i in range(PUM_N)}
     removed = 0
     for a in subsystem.get_all_level_actors():
         try:
@@ -201,26 +173,40 @@ def main():
         except Exception:
             continue
     if removed:
-        log("기존 바닥 액터 %d 개 제거" % removed)
+        log("기존 바닥·품계석 %d 개 제거" % removed)
 
-    master = ensure_master()
     plane_mesh = unreal.EditorAssetLibrary.load_asset("/Engine/BasicShapes/Plane")
+    cube_mesh = unreal.EditorAssetLibrary.load_asset("/Engine/BasicShapes/Cube")
     if plane_mesh is None:
-        log_warn("기본 Plane 메시를 못 찾음 — 중단")
+        log_warn("기본 Plane 메시 없음 — 중단")
         return
 
-    for label, key, pos, scale in PLANES:
-        mic = ensure_instance(master, key)
+    for label, surf, pos, size in PLANES:
+        mat = ensure_plane_material(label, surf, size)
         actor = subsystem.spawn_actor_from_object(plane_mesh, unreal.Vector(*pos))
         actor.set_actor_label(label)
-        actor.set_actor_scale3d(unreal.Vector(scale[0], scale[1], 1.0))
+        actor.set_actor_scale3d(unreal.Vector(size[0], size[1], 1.0))
         try:
-            actor.static_mesh_component.set_material(0, mic)
+            actor.static_mesh_component.set_material(0, mat)
         except Exception as e:
             log_warn("%s 머티리얼 배정 실패: %s" % (label, e))
-        log("%s 깔림 (%s, %.0fx%.0fm)" % (label, key, scale[0], scale[1]))
+        log("%s (%.0fx%.0fm)" % (label, size[0], size[1]))
 
-    log("바닥 완료 — 마당=박석, 중앙 어도, 바깥=마사토. 레벨 저장(Cmd+S) 잊지 말 것.")
+    if cube_mesh:
+        stone = ensure_stone_material()
+        for side, ysign in (("E", 1.0), ("W", -1.0)):
+            for i in range(PUM_N):
+                pos = unreal.Vector(PUM_X0 + i * PUM_STEP, ysign * PUM_Y, 45.0)
+                a = subsystem.spawn_actor_from_object(cube_mesh, pos)
+                a.set_actor_label("Pum_%s_%02d" % (side, i))
+                a.set_actor_scale3d(unreal.Vector(0.45, 0.30, 0.90))
+                try:
+                    a.static_mesh_component.set_material(0, stone)
+                except Exception:
+                    pass
+        log("품계석 프록시 2열×%d 배치 (스케치팹 도착 시 교체)" % PUM_N)
+
+    log("바닥 v2 완료 — 박석 마당+남쪽 전정, 삼도, 품계석, 마사토. Cmd+S 저장.")
 
 
 if __name__ == "__main__":

@@ -19,15 +19,39 @@ GROUND_ROOT = "/Game/Gyeongbok/Ground"
 SCANS_ROOT = "/Game/Gyeongbok/Scans"
 RIDGE_MAT_PATH = GROUND_ROOT + "/M_Ridge"
 
-# (라벨, UE위치 cm(x=북,y=동), 스케일 m(가로,세로,높이)) — 산 기슭이 멀리 북·서를 두름
-MOUNTAINS = [
-    ("Backdrop_Bukak_Main", (200000.0, -20000.0), (1800.0, 1400.0, 360.0)),
-    ("Backdrop_Bukak_E",    (215000.0,  70000.0), (1500.0, 1200.0, 260.0)),
-    ("Backdrop_Bukak_W",    (190000.0, -95000.0), (1400.0, 1100.0, 240.0)),
-    ("Backdrop_NE_Far",     (240000.0, 140000.0), (1700.0, 1300.0, 280.0)),
-    ("Backdrop_Inwang",     (80000.0, -220000.0), (2200.0, 1600.0, 300.0)),
-    ("Backdrop_Inwang_S",   (20000.0, -235000.0), (1600.0, 1200.0, 220.0)),
-]
+# 산 능선 = 원뿔 여러 개를 겹친 '사슬' — 단일 원뿔(모래언덕처럼 보임) 대신
+# 크기가 들쭉날쭉한 봉우리들이 겹치며 능선 실루엣을 만든다. 시드 고정 = 재실행 동일.
+import random
+
+
+def make_mountains():
+    rng = random.Random(7)
+    peaks = []
+
+    def chain(prefix, n, x0, y0, x1, y1, h_lo, h_hi, w_lo, w_hi):
+        for i in range(n):
+            f = i / max(n - 1, 1)
+            x = x0 + (x1 - x0) * f + rng.uniform(-9000, 9000)
+            y = y0 + (y1 - y0) * f + rng.uniform(-9000, 9000)
+            h = rng.uniform(h_lo, h_hi)
+            w = rng.uniform(w_lo, w_hi)
+            peaks.append(("Backdrop_%s_%02d" % (prefix, i), (x, y),
+                          (w, w * rng.uniform(0.6, 0.9), h)))
+
+    # 북악 주능선 (북쪽 뒤, 1.9~2.5km) — 주봉 하나 크게 + 좌우로 낮아짐
+    chain("Bukak", 9, 205000, -130000, 235000, 150000, 140, 260, 450, 850)
+    peaks.append(("Backdrop_Bukak_Peak", (210000.0, -10000.0), (700.0, 550.0, 360.0)))
+    # 북쪽 앞줄 낮은 능선 (1.5km, 어둡게 겹 보이는 층)
+    chain("BukakFront", 6, 155000, -70000, 165000, 90000, 60, 130, 350, 600)
+    # 인왕산 (서쪽 2~2.5km) — 넓은 바위산 느낌으로 큰 봉 + 부속 봉
+    chain("Inwang", 7, -20000, -215000, 120000, -245000, 120, 240, 500, 900)
+    peaks.append(("Backdrop_Inwang_Peak", (60000.0, -225000.0), (900.0, 700.0, 320.0)))
+    # 남서 원경 (안산 방향, 아주 멀리)
+    chain("Far_SW", 4, -120000, -180000, -60000, -240000, 100, 180, 500, 800)
+    return peaks
+
+
+MOUNTAINS = make_mountains()
 
 # 북회랑 대체: (라벨, 원본 스캔 폴더, UE위치 cm) — 월랑 52m 를 북변 좌우에
 NORTH_FILL = [
